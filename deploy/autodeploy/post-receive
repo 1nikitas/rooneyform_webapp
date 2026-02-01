@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BRANCH="main"
+APP_DIR="/var/www/rooneyform_app"
+GIT_DIR_PATH="/opt/rooneyform.git"
+
+export GIT_WORK_TREE="$APP_DIR"
+export GIT_DIR="$GIT_DIR_PATH"
+
+git checkout -f "$BRANCH"
+
+cd "$APP_DIR"
+
+if [[ -f deploy/config.env ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  source deploy/config.env
+  set +a
+fi
+
+./deploy/render.sh
+
+# Backend deps
+if [[ -n "${VENV_DIR:-}" && ! -d "$VENV_DIR" ]]; then
+  python3.12 -m venv "$VENV_DIR"
+fi
+"${VENV_DIR:-/var/www/rooneyform_app/venv}/bin/pip" install -r backend/requirements.txt
+
+# Frontend build
+npm --prefix frontend install
+cp deploy/out/frontend.env.production frontend/.env.production
+npm --prefix frontend run build
+
+# Install configs
+mkdir -p "$(dirname "${SYSTEMD_ENV_FILE:-/etc/rooneyform/rooneyform.env}")"
+cp "deploy/out/${APP_NAME:-rooneyform}.env" "${SYSTEMD_ENV_FILE:-/etc/rooneyform/rooneyform.env}"
+cp "deploy/out/${APP_NAME:-rooneyform}.service" "${SYSTEMD_SERVICE:-/etc/systemd/system/rooneyform.service}"
+cp deploy/out/nginx.conf "${NGINX_SITE:-/etc/nginx/sites-available/rooneyform.conf}"
+ln -sf "${NGINX_SITE:-/etc/nginx/sites-available/rooneyform.conf}" /etc/nginx/sites-enabled/
+
+systemctl daemon-reload
+systemctl enable --now "${APP_NAME:-rooneyform}.service"
+systemctl restart "${APP_NAME:-rooneyform}.service"
+nginx -t && systemctl reload nginx

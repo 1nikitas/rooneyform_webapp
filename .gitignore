@@ -1,0 +1,26 @@
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/.env*
+
+# Python
+backend/venv/
+__pycache__/
+*.pyc
+
+# Database
+backend/rooneystore.db
+
+# Generated/static assets
+deploy/out/
+backend/static/
+
+# Logs & PIDs
+*.log
+*.pid
+
+# OS
+.DS_Store
+
+# Temp
+*.tmp

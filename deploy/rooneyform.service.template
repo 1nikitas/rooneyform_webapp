@@ -1,0 +1,14 @@
+[Unit]
+Description=${APP_NAME} FastAPI
+After=network.target
+
+[Service]
+User=${APP_USER}
+WorkingDirectory=${BACKEND_DIR}
+Environment="PATH=${VENV_DIR}/bin"
+EnvironmentFile=${SYSTEMD_ENV_FILE}
+ExecStart=${VENV_DIR}/bin/gunicorn ${BACKEND_APP} -k uvicorn.workers.UvicornWorker --bind ${BACKEND_HOST}:${BACKEND_PORT} --workers ${GUNICORN_WORKERS}
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
