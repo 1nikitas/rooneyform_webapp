@@ -518,11 +518,7 @@ export default function AdminApp() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <input className="rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400" name="size" placeholder="Размер" value={form.size} onChange={handleChange} />
-                  <select className="rounded-xl border border-gray-200 bg-white p-3 text-gray-900" name="category_slug" value={form.category_slug} onChange={handleChange}>
-                    <option value="premier-league">Premier League</option>
-                    <option value="la-liga">La Liga</option>
-                    <option value="serie-a">Serie A</option>
-                  </select>
+                  <input className="rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400" name="category_slug" placeholder="Лига (slug)" value={form.category_slug} onChange={handleChange} />
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
