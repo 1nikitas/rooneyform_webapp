@@ -510,15 +510,15 @@ export default function AdminApp() {
             <section className="glass-card rounded-3xl p-6 space-y-4">
               <h2 className="text-lg font-semibold">Добавить товар</h2>
               <form className="space-y-3" onSubmit={handleSubmit}>
-                <input className="w-full rounded-xl border border-gray-200 p-3" name="name" placeholder="Название" value={form.name} onChange={handleChange} required />
-                <textarea className="w-full rounded-xl border border-gray-200 p-3" name="description" placeholder="Описание" value={form.description} onChange={handleChange} />
+                <input className="w-full rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400" name="name" placeholder="Название" value={form.name} onChange={handleChange} required />
+                <textarea className="w-full rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400" name="description" placeholder="Описание" value={form.description} onChange={handleChange} />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <input className="rounded-xl border border-gray-200 p-3" name="price" placeholder="Цена (₽)" value={form.price} onChange={handleChange} required type="number" min="0" />
-                  <input className="rounded-xl border border-gray-200 p-3" name="team" placeholder="Команда" value={form.team} onChange={handleChange} />
+                  <input className="rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400" name="price" placeholder="Цена (₽)" value={form.price} onChange={handleChange} required type="number" min="0" />
+                  <input className="rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400" name="team" placeholder="Команда" value={form.team} onChange={handleChange} />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <input className="rounded-xl border border-gray-200 p-3" name="size" placeholder="Размер" value={form.size} onChange={handleChange} />
-                  <select className="rounded-xl border border-gray-200 p-3" name="category_slug" value={form.category_slug} onChange={handleChange}>
+                  <input className="rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400" name="size" placeholder="Размер" value={form.size} onChange={handleChange} />
+                  <select className="rounded-xl border border-gray-200 bg-white p-3 text-gray-900" name="category_slug" value={form.category_slug} onChange={handleChange}>
                     <option value="premier-league">Premier League</option>
                     <option value="la-liga">La Liga</option>
                     <option value="serie-a">Serie A</option>
