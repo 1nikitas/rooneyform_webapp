@@ -122,7 +122,12 @@ async def create_product(payload: ProductCreate, db: AsyncSession = Depends(get_
     cat_res = await db.execute(cat_stmt)
     category = cat_res.scalar_one_or_none()
     if not category:
-        raise HTTPException(status_code=404, detail="Category not found")
+        category = Category(
+            name=(payload.category_slug or "").replace("-", " ").title(),
+            slug=payload.category_slug,
+        )
+        db.add(category)
+        await db.flush()
 
     gallery = payload.gallery or []
     image_url = payload.image_url
