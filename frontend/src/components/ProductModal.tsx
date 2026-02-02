@@ -119,7 +119,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                                     e.stopPropagation();
                                     onClose();
                                 }}
-                                className="absolute right-4 z-20 bg-black/30 backdrop-blur-md p-2 rounded-full text-white tg-modal-close"
+                                className="absolute top-4 right-4 z-20 bg-black/30 backdrop-blur-md p-2 rounded-full text-white"
                             >
                                 <X size={24} />
                             </button>
