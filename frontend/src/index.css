@@ -15,6 +15,7 @@
   --tg-viewport-offset-top: var(--tg-viewport-stable-offset-top, 0px);
   --tg-top-extra: 28px;
   --tg-modal-extra: 16px;
+  --tg-close-extra: 0px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -52,7 +53,7 @@ body {
 }
 
 .tg-modal-close {
-  top: calc(16px + var(--safe-area-top) + var(--tg-viewport-offset-top) + var(--tg-top-extra) + var(--tg-modal-extra));
+  top: calc(8px + var(--safe-area-top) + var(--tg-viewport-offset-top) + var(--tg-top-extra) + var(--tg-close-extra));
 }
 
 .tg-fullscreen-top {
@@ -68,6 +69,7 @@ body {
   :root {
     --tg-top-extra: 72px;
     --tg-modal-extra: 28px;
+    --tg-close-extra: 4px;
   }
 }
 
