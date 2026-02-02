@@ -49,7 +49,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                     />
                     <motion.div
                         layoutId={`card-${product.id}`}
-                        className="fixed inset-x-0 bottom-0 top-10 bg-tg-secondaryBg text-tg-text rounded-t-[30px] overflow-hidden z-[60] flex flex-col shadow-2xl"
+                        className="fixed inset-x-0 bottom-0 bg-tg-secondaryBg text-tg-text rounded-t-[30px] overflow-hidden z-[60] flex flex-col shadow-2xl tg-modal-sheet"
                     >
                         <div className={`relative h-1/2 ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-100'}`}>
                             <Swiper
@@ -119,7 +119,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                                     e.stopPropagation();
                                     onClose();
                                 }}
-                                className="absolute top-4 right-4 z-20 bg-black/30 backdrop-blur-md p-2 rounded-full text-white"
+                                className="absolute right-4 z-20 bg-black/30 backdrop-blur-md p-2 rounded-full text-white tg-modal-close"
                             >
                                 <X size={24} />
                             </button>
@@ -188,7 +188,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                                 exit={{ opacity: 0 }}
                                 className="fixed inset-0 bg-black/90 z-[80] flex flex-col"
                             >
-                                <div className="flex justify-end p-4">
+                                <div className="flex justify-end p-4 tg-fullscreen-top">
                                     <button
                                         type="button"
                                         onClick={() => setIsFullscreen(false)}
