@@ -219,7 +219,7 @@ function App() {
     if (activeTab === 'home') {
       return (
         <div className="space-y-6">
-          <header className="flex items-center mb-6 gap-3">
+          <header className="flex items-center mb-6 gap-3 tg-keep-header">
             <div className="flex-1 flex justify-start">
               <button
                 type="button"

@@ -13,7 +13,7 @@
   --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
   --tg-viewport-offset-top: var(--tg-viewport-stable-offset-top, 0px);
-  --tg-top-extra: 18px;
+  --tg-top-extra: 24px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -58,9 +58,14 @@ body {
   padding-top: calc(12px + var(--safe-area-top) + var(--tg-viewport-offset-top) + var(--tg-top-extra));
 }
 
+.tg-keep-header {
+  margin-top: calc(-1 * (var(--safe-area-top) + var(--tg-viewport-offset-top) + var(--tg-top-extra)));
+  padding-top: calc(var(--safe-area-top) + var(--tg-viewport-offset-top));
+}
+
 @media (max-width: 640px) {
   :root {
-    --tg-top-extra: 40px;
+    --tg-top-extra: 56px;
   }
 }
 
