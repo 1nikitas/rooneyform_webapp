@@ -73,6 +73,7 @@ export default function AdminApp() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [daysRange, setDaysRange] = useState(DEFAULT_RANGE_DAYS);
   const [adminTab, setAdminTab] = useState<'products' | 'orders'>('products');
+  const [productTab, setProductTab] = useState<'jerseys' | 'posters'>('jerseys');
   const [rangeStart, setRangeStart] = useState<Date>(initialRange.start);
   const [rangeEnd, setRangeEnd] = useState<Date>(initialRange.end);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -143,6 +144,14 @@ export default function AdminApp() {
       ...(includeYear ? { year: 'numeric' } : {}),
     });
   const selectedRangeLabel = `${formatRangeDate(rangeStart, true)} — ${formatRangeDate(rangeEnd, true)}`;
+  const isPosterTab = productTab === 'posters';
+  const isPosterEdit = editForm.category_slug === 'posters';
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      const isPoster = product.category?.slug === 'posters';
+      return isPosterTab ? isPoster : !isPoster;
+    });
+  }, [products, isPosterTab]);
 
   const loadProducts = async () => {
     const res = await apiClient.get('/products/');
@@ -162,6 +171,23 @@ export default function AdminApp() {
     loadProducts();
     loadOrders();
   }, []);
+
+  useEffect(() => {
+    setForm((prev) => {
+      if (isPosterTab) {
+        return {
+          ...prev,
+          team: '',
+          size: '',
+          category_slug: 'posters',
+        };
+      }
+      return {
+        ...prev,
+        category_slug: prev.category_slug === 'posters' ? 'premier-league' : prev.category_slug,
+      };
+    });
+  }, [isPosterTab]);
 
   useEffect(() => {
     uploadsRef.current = uploads;
@@ -507,19 +533,44 @@ export default function AdminApp() {
 
         {adminTab === 'products' && (
           <>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className={`px-4 py-2 rounded-full text-sm font-semibold ${productTab === 'jerseys' ? 'bg-blue-600 text-white' : 'bg-white/10 text-gray-500'}`}
+                onClick={() => setProductTab('jerseys')}
+              >
+                Футболки
+              </button>
+              <button
+                type="button"
+                className={`px-4 py-2 rounded-full text-sm font-semibold ${productTab === 'posters' ? 'bg-blue-600 text-white' : 'bg-white/10 text-gray-500'}`}
+                onClick={() => setProductTab('posters')}
+              >
+                Плакаты
+              </button>
+            </div>
             <section className="glass-card rounded-3xl p-6 space-y-4">
-              <h2 className="text-lg font-semibold">Добавить товар</h2>
+              <h2 className="text-lg font-semibold">
+                Добавить {productTab === 'posters' ? 'плакат' : 'футболку'}
+              </h2>
               <form className="space-y-3" onSubmit={handleSubmit}>
                 <input className="w-full rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400" name="name" placeholder="Название" value={form.name} onChange={handleChange} required />
                 <textarea className="w-full rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400" name="description" placeholder="Описание" value={form.description} onChange={handleChange} />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <input className="rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400" name="price" placeholder="Цена (₽)" value={form.price} onChange={handleChange} required type="number" min="0" />
-                  <input className="rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400" name="team" placeholder="Команда" value={form.team} onChange={handleChange} />
+                  {!isPosterTab && (
+                    <input className="rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400" name="team" placeholder="Команда" value={form.team} onChange={handleChange} />
+                  )}
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <input className="rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400" name="size" placeholder="Размер" value={form.size} onChange={handleChange} />
-                  <input className="rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400" name="category_slug" placeholder="Лига (slug)" value={form.category_slug} onChange={handleChange} />
-                </div>
+                {!isPosterTab && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input className="rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400" name="size" placeholder="Размер" value={form.size} onChange={handleChange} />
+                    <input className="rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400" name="category_slug" placeholder="Лига (slug)" value={form.category_slug} onChange={handleChange} />
+                  </div>
+                )}
+                {isPosterTab && (
+                  <input type="hidden" name="category_slug" value="posters" />
+                )}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs uppercase tracking-[0.2em] text-gray-500">Фотографии</span>
@@ -580,9 +631,11 @@ export default function AdminApp() {
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-semibold">Текущие товары</h2>
+              <h2 className="text-lg font-semibold">
+                Текущие {productTab === 'posters' ? 'плакаты' : 'футболки'}
+              </h2>
               <div className="space-y-3">
-                {products.map((product) => (
+                {filteredProducts.map((product) => (
                   <div
                     key={product.id}
                     role="button"
@@ -600,7 +653,9 @@ export default function AdminApp() {
                     <div className="flex-1">
                       <p className="text-xs text-gray-500 uppercase">{product.category?.name}</p>
                       <h3 className="font-semibold">{product.name}</h3>
-                      <p className="text-sm text-gray-500">{product.team} • {product.size}</p>
+                      <p className="text-sm text-gray-500">
+                        {[product.team, product.size].filter(Boolean).join(' • ') || 'Без характеристик'}
+                      </p>
                       <p className="text-xs text-blue-500 mt-1">Нажмите для редактирования</p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
@@ -618,6 +673,11 @@ export default function AdminApp() {
                     </div>
                   </div>
                 ))}
+                {filteredProducts.length === 0 && (
+                  <div className="glass-card rounded-2xl px-6 py-10 text-center text-gray-500">
+                    Пока нет товаров в этой вкладке.
+                  </div>
+                )}
               </div>
             </section>
           </>
@@ -899,42 +959,46 @@ export default function AdminApp() {
                         min="0"
                       />
                     </label>
-                    <label className="text-xs font-semibold text-gray-500 space-y-1">
-                      <span className="uppercase tracking-wide text-[11px]">Команда</span>
-                      <input
-                        className="w-full rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400"
-                        name="team"
-                        placeholder="Команда"
-                        value={editForm.team}
-                        onChange={handleEditChange}
-                      />
-                    </label>
+                    {!isPosterEdit && (
+                      <label className="text-xs font-semibold text-gray-500 space-y-1">
+                        <span className="uppercase tracking-wide text-[11px]">Команда</span>
+                        <input
+                          className="w-full rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400"
+                          name="team"
+                          placeholder="Команда"
+                          value={editForm.team}
+                          onChange={handleEditChange}
+                        />
+                      </label>
+                    )}
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <label className="text-xs font-semibold text-gray-500 space-y-1">
-                      <span className="uppercase tracking-wide text-[11px]">Размер</span>
-                      <input
-                        className="w-full rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400"
-                        name="size"
-                        placeholder="Размер"
-                        value={editForm.size}
-                        onChange={handleEditChange}
-                      />
-                    </label>
-                    <label className="text-xs font-semibold text-gray-500 space-y-1">
-                      <span className="uppercase tracking-wide text-[11px]">Категория</span>
-                      <select
-                        className="w-full rounded-xl border border-gray-200 bg-white p-3 text-gray-900"
-                        name="category_slug"
-                        value={editForm.category_slug}
-                        onChange={handleEditChange}
-                      >
-                        <option value="premier-league">Premier League</option>
-                        <option value="la-liga">La Liga</option>
-                        <option value="serie-a">Serie A</option>
-                      </select>
-                    </label>
-                  </div>
+                  {!isPosterEdit && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <label className="text-xs font-semibold text-gray-500 space-y-1">
+                        <span className="uppercase tracking-wide text-[11px]">Размер</span>
+                        <input
+                          className="w-full rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400"
+                          name="size"
+                          placeholder="Размер"
+                          value={editForm.size}
+                          onChange={handleEditChange}
+                        />
+                      </label>
+                      <label className="text-xs font-semibold text-gray-500 space-y-1">
+                        <span className="uppercase tracking-wide text-[11px]">Лига (slug)</span>
+                        <input
+                          className="w-full rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400"
+                          name="category_slug"
+                          placeholder="premier-league"
+                          value={editForm.category_slug}
+                          onChange={handleEditChange}
+                        />
+                      </label>
+                    </div>
+                  )}
+                  {isPosterEdit && (
+                    <input type="hidden" name="category_slug" value="posters" />
+                  )}
                 </div>
 
                 <div className="space-y-3">

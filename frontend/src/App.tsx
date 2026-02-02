@@ -22,23 +22,6 @@ import { RippleButton, RippleButtonRipples } from './components/animate-ui/primi
 
 const TAB_ORDER = ['home', 'cart', 'favorites'] as const;
 
-const posterCatalog = [
-  {
-    id: 'poster-1',
-    title: 'Poster Rooney 2004',
-    subtitle: 'Коллекционный принт',
-    image: resolveAssetUrl('/static/product_1_2.jpg'),
-    price: 65,
-  },
-  {
-    id: 'poster-2',
-    title: 'Poster Milan 2005',
-    subtitle: 'Лимитированная серия',
-    image: resolveAssetUrl('/static/product_3_1.jpg'),
-    price: 70,
-  },
-];
-
 const tabVariants = {
   enter: (direction: number) => ({
     x: direction >= 0 ? 25 : -25,
@@ -79,31 +62,21 @@ function App() {
   const fetchRequestId = useRef(0);
   const fetchAbortRef = useRef<AbortController | null>(null);
 
-  useEffect(() => {
-    fetchCart();
-    fetchFavorites();
-    fetchProducts();
-  }, [fetchCart, fetchFavorites, fetchProducts]);
+  const catalogCategory = useMemo(
+    () => (catalogFilter === 'posters' ? 'posters' : undefined),
+    [catalogFilter],
+  );
 
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      fetchProducts(searchQuery);
-    }, 500);
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery, fetchProducts]);
-
-  useEffect(() => {
-    const photoUrl = WebApp.initDataUnsafe?.user?.photo_url || null;
-    setUserPhoto(photoUrl);
-  }, []);
-
-  const fetchProducts = useCallback(async (q = '') => {
+  const fetchProducts = useCallback(async (q = '', categorySlug?: string) => {
     fetchAbortRef.current?.abort();
     const controller = new AbortController();
     fetchAbortRef.current = controller;
     const requestId = ++fetchRequestId.current;
     try {
-      const res = await apiClient.get(`/products/?search=${encodeURIComponent(q)}`, {
+      const params = new URLSearchParams();
+      if (q) params.append('search', q);
+      if (categorySlug) params.append('category_slug', categorySlug);
+      const res = await apiClient.get(`/products/?${params.toString()}`, {
         signal: controller.signal,
       });
       if (requestId !== fetchRequestId.current) {
@@ -136,6 +109,24 @@ function App() {
       console.error(e);
       setProducts([]);
     }
+  }, []);
+
+  useEffect(() => {
+    fetchCart();
+    fetchFavorites();
+    fetchProducts('', catalogCategory);
+  }, [fetchCart, fetchFavorites, fetchProducts, catalogCategory]);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchProducts(searchQuery, catalogCategory);
+    }, 500);
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, fetchProducts, catalogCategory]);
+
+  useEffect(() => {
+    const photoUrl = WebApp.initDataUnsafe?.user?.photo_url || null;
+    setUserPhoto(photoUrl);
   }, []);
 
   const handleTabChange = (tab: string) => {
@@ -188,7 +179,10 @@ function App() {
 
   const filteredProducts = useMemo(() => {
     let list = [...products];
-    if (sizeFilter !== 'all') {
+    if (catalogFilter === 'jerseys') {
+      list = list.filter((product) => product.category?.slug !== 'posters');
+    }
+    if (catalogFilter === 'jerseys' && sizeFilter !== 'all') {
       list = list.filter((product) => product.size?.trim().toUpperCase() === sizeFilter);
     }
     if (sortOption === 'price-asc') {
@@ -199,7 +193,7 @@ function App() {
       list.sort((a, b) => a.name.localeCompare(b.name));
     }
     return list;
-  }, [products, sizeFilter, sortOption]);
+  }, [products, sizeFilter, sortOption, catalogFilter]);
 
   const notifyUser = (message: string) => {
     if (typeof WebApp?.showAlert === 'function') {
@@ -396,9 +390,8 @@ function App() {
               </div>
             )}
 
-            {catalogFilter === 'jerseys' ? (
-              <div className="grid grid-cols-2 gap-4">
-                {filteredProducts.map(product => (
+            <div className="grid grid-cols-2 gap-4">
+              {filteredProducts.map(product => (
                 <ProductCard 
                   key={product.id} 
                   product={product} 
@@ -413,40 +406,8 @@ function App() {
                 />
               ))}
             </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-4">
-                {posterCatalog.map((poster) => (
-                  <div key={poster.id} className="rounded-3xl overflow-hidden relative shadow-lg">
-                    <img src={poster.image} alt={poster.title} className="w-full h-48 object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 to-transparent p-4 flex flex-col justify-end space-y-1">
-                      <ShimmeringText
-                        text="Плакаты"
-                        className="text-xs uppercase tracking-widest"
-                        color="rgba(191,219,254,0.9)"
-                        shimmeringColor="rgba(226,232,240,0.95)"
-                      />
-                      <h3 className="font-semibold text-white">{poster.title}</h3>
-                      <p className="text-xs text-white/70">{poster.subtitle}</p>
-                      <div className="flex items-center justify-between text-white text-sm mt-1">
-                        <span>{formatPrice(poster.price)}</span>
-                        <RippleButton asChild hoverScale={1.03} tapScale={0.97}>
-                          <button
-                            type="button"
-                            className="px-3 py-1 rounded-full bg-white/20 hover:bg-white/30 text-xs uppercase tracking-wide"
-                            onClick={() => alert('Каталог плакатов скоро будет доступен')}
-                          >
-                            Смотреть
-                            <RippleButtonRipples color="rgba(255,255,255,0.45)" />
-                          </button>
-                        </RippleButton>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
             
-            {catalogFilter === 'jerseys' && filteredProducts.length === 0 && (
+            {filteredProducts.length === 0 && (
               <div className="flex flex-col items-center justify-center py-20 text-gray-500">
                 <Loader2 className="animate-spin mb-2" />
                 <p>Не нашли позиции под текущие фильтры.</p>
