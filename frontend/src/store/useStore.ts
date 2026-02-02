@@ -5,6 +5,7 @@ import type { CartItem, Favorite } from '../types';
 interface AppState {
     cart: CartItem[];
     favorites: Favorite[];
+    pendingCartIds: number[];
     isLoading: boolean;
     fetchCart: () => Promise<void>;
     fetchFavorites: () => Promise<void>;
@@ -16,12 +17,20 @@ interface AppState {
 export const useStore = create<AppState>((set, get) => ({
     cart: [],
     favorites: [],
+    pendingCartIds: [],
     isLoading: false,
 
     fetchCart: async () => {
         try {
             const res = await apiClient.get('/cart/');
-            set({ cart: res.data });
+            const items = Array.isArray(res.data) ? res.data : [];
+            const unique = new Map<number, CartItem>();
+            for (const item of items) {
+                if (!unique.has(item.product.id)) {
+                    unique.set(item.product.id, { ...item, quantity: 1 });
+                }
+            }
+            set({ cart: Array.from(unique.values()) });
         } catch (error) {
             console.error(error);
         }
@@ -37,12 +46,23 @@ export const useStore = create<AppState>((set, get) => ({
     },
 
     addToCart: async (product_id, quantity = 1) => {
+        const { cart, pendingCartIds } = get();
+        if (cart.some(item => item.product.id === product_id) || pendingCartIds.includes(product_id)) {
+            return false;
+        }
+        set((state) => ({ pendingCartIds: [...state.pendingCartIds, product_id] }));
         try {
             await apiClient.post('/cart/', { product_id, quantity });
             await get().fetchCart();
+            set((state) => ({
+                pendingCartIds: state.pendingCartIds.filter((id) => id !== product_id),
+            }));
             return true;
         } catch (error) {
              console.error(error);
+            set((state) => ({
+                pendingCartIds: state.pendingCartIds.filter((id) => id !== product_id),
+            }));
             return false;
         }
     },

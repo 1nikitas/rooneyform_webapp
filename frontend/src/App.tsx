@@ -58,7 +58,7 @@ function App() {
     padding: '2px 10px',
   };
   
-  const { cart, favorites, addToCart, fetchCart, fetchFavorites, removeFromCart } = useStore();
+  const { cart, favorites, pendingCartIds, addToCart, fetchCart, fetchFavorites, removeFromCart } = useStore();
   const fetchRequestId = useRef(0);
   const fetchAbortRef = useRef<AbortController | null>(null);
 
@@ -230,12 +230,13 @@ function App() {
   }, [isDark]);
 
   const cartProductIds = useMemo(() => new Set(cart.map(item => item.product.id)), [cart]);
+  const pendingCartSet = useMemo(() => new Set(pendingCartIds), [pendingCartIds]);
 
   const renderContent = () => {
     if (activeTab === 'home') {
       return (
         <div className="space-y-6">
-          <header className="flex items-center mb-6 gap-3">
+          <header className="flex items-center mb-6 gap-3 relative z-10">
             <div className="flex-1 flex justify-start">
               <button
                 type="button"
@@ -398,11 +399,11 @@ function App() {
                   onClick={() => setSelectedProduct(product)}
                   onAdd={(e) => {
                     e.stopPropagation();
-                    if (!cartProductIds.has(product.id)) {
+                    if (!cartProductIds.has(product.id) && !pendingCartSet.has(product.id)) {
                       addToCart(product.id);
                     }
                   }}
-                  inCart={cartProductIds.has(product.id)}
+                  inCart={cartProductIds.has(product.id) || pendingCartSet.has(product.id)}
                 />
               ))}
             </div>
@@ -551,11 +552,11 @@ function App() {
                             onClick={() => setSelectedProduct(fav.product)}
                             onAdd={(e) => {
                                 e.stopPropagation();
-                                if (!cartProductIds.has(fav.product.id)) {
+                                if (!cartProductIds.has(fav.product.id) && !pendingCartSet.has(fav.product.id)) {
                                   addToCart(fav.product.id);
                                 }
                             }}
-                            inCart={cartProductIds.has(fav.product.id)}
+                            inCart={cartProductIds.has(fav.product.id) || pendingCartSet.has(fav.product.id)}
                         />
                     ))}
                 </div>

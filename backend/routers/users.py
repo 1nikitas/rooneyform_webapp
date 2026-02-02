@@ -80,11 +80,17 @@ async def add_to_cart(
          raise HTTPException(status_code=404, detail="Product not found")
 
     # Check if already in cart
-    result = await db.execute(select(CartItem).where(CartItem.user_id == user_id, CartItem.product_id == item.product_id))
-    cart_item = result.scalar_one_or_none()
-    
+    result = await db.execute(
+        select(CartItem).where(CartItem.user_id == user_id, CartItem.product_id == item.product_id)
+    )
+    cart_items = result.scalars().all()
+    cart_item = cart_items[0] if cart_items else None
+
     if cart_item:
         cart_item.quantity = 1
+        if len(cart_items) > 1:
+            for extra in cart_items[1:]:
+                await db.delete(extra)
     else:
         cart_item = CartItem(user_id=user_id, product_id=item.product_id, quantity=1)
         db.add(cart_item)

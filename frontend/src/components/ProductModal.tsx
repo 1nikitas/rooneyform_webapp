@@ -21,7 +21,7 @@ interface ProductModalProps {
 }
 
 export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
-    const { addToCart, toggleFavorite, favorites, cart } = useStore();
+    const { addToCart, toggleFavorite, favorites, cart, pendingCartIds } = useStore();
     const [activeIndex, setActiveIndex] = useState(0);
     const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
@@ -31,7 +31,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
 
     const isLiked = favorites.some(f => f.product.id === product.id);
     const images = product.gallery?.length ? product.gallery : [product.image_url];
-    const inCart = cart.some(item => item.product.id === product.id);
+    const inCart = cart.some(item => item.product.id === product.id) || pendingCartIds.includes(product.id);
 
     useEffect(() => {
         setActiveIndex(0);
