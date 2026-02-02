@@ -13,7 +13,7 @@
   --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
   --tg-viewport-offset-top: var(--tg-viewport-stable-offset-top, 0px);
-  --tg-top-extra: 0px;
+  --tg-top-extra: 18px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -60,7 +60,7 @@ body {
 
 @media (max-width: 640px) {
   :root {
-    --tg-top-extra: 24px;
+    --tg-top-extra: 40px;
   }
 }
 
