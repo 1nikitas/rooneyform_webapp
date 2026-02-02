@@ -13,7 +13,8 @@
   --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
   --tg-viewport-offset-top: var(--tg-viewport-stable-offset-top, 0px);
-  --tg-top-extra: 24px;
+  --tg-top-extra: 28px;
+  --tg-modal-extra: 16px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -47,15 +48,15 @@ body {
 }
 
 .tg-modal-sheet {
-  top: calc(12px + var(--safe-area-top) + var(--tg-viewport-offset-top) + var(--tg-top-extra));
+  top: calc(12px + var(--safe-area-top) + var(--tg-viewport-offset-top) + var(--tg-top-extra) + var(--tg-modal-extra));
 }
 
 .tg-modal-close {
-  top: calc(16px + var(--safe-area-top) + var(--tg-viewport-offset-top) + var(--tg-top-extra));
+  top: calc(16px + var(--safe-area-top) + var(--tg-viewport-offset-top) + var(--tg-top-extra) + var(--tg-modal-extra));
 }
 
 .tg-fullscreen-top {
-  padding-top: calc(12px + var(--safe-area-top) + var(--tg-viewport-offset-top) + var(--tg-top-extra));
+  padding-top: calc(12px + var(--safe-area-top) + var(--tg-viewport-offset-top) + var(--tg-top-extra) + var(--tg-modal-extra));
 }
 
 .tg-keep-header {
@@ -65,7 +66,8 @@ body {
 
 @media (max-width: 640px) {
   :root {
-    --tg-top-extra: 56px;
+    --tg-top-extra: 72px;
+    --tg-modal-extra: 28px;
   }
 }
 
