@@ -11,7 +11,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onTabChange })
     const cartCount = useStore(state => state.cart.length);
 
     return (
-        <div className="fixed bottom-4 left-1/2 z-50 h-16 w-[min(420px,calc(100%-32px))] -translate-x-1/2 glass rounded-2xl flex justify-around items-center px-2">
+        <div className="fixed tg-safe-nav left-1/2 z-50 h-16 w-[min(420px,calc(100%-32px))] -translate-x-1/2 glass rounded-2xl flex justify-around items-center px-2">
             <button 
                 onClick={() => onTabChange('home')}
                 className={`p-2 transition-colors ${currentTab === 'home' ? 'text-blue-500' : 'text-gray-400'}`}

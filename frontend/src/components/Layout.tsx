@@ -10,8 +10,8 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children, containerClassName }) => {
     const { palette } = useTheme();
     const contentClassName = containerClassName
-        ? `w-full pb-24 px-4 pt-4 ${containerClassName}`
-        : 'w-full max-w-md pb-24 px-4 pt-4';
+        ? `w-full px-4 tg-safe-container ${containerClassName}`
+        : 'w-full max-w-md px-4 tg-safe-container';
 
     useEffect(() => {
         // Initialize Telegram WebApp
