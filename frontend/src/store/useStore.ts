@@ -8,7 +8,7 @@ interface AppState {
     isLoading: boolean;
     fetchCart: () => Promise<void>;
     fetchFavorites: () => Promise<void>;
-    addToCart: (product_id: number, quantity?: number) => Promise<void>;
+    addToCart: (product_id: number, quantity?: number) => Promise<boolean>;
     removeFromCart: (item_id: number) => Promise<void>;
     toggleFavorite: (product_id: number) => Promise<void>;
 }
@@ -39,9 +39,11 @@ export const useStore = create<AppState>((set, get) => ({
     addToCart: async (product_id, quantity = 1) => {
         try {
             await apiClient.post('/cart/', { product_id, quantity });
-            get().fetchCart();
+            await get().fetchCart();
+            return true;
         } catch (error) {
              console.error(error);
+            return false;
         }
     },
 

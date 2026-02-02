@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Layout } from './components/Layout';
 import { ProductCard } from './components/ProductCard';
 import { BottomNav } from './components/BottomNav';
@@ -11,7 +11,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import WebApp from '@twa-dev/sdk';
 import { formatPrice } from './utils/currency';
 import { useTheme } from './context/ThemeContext';
-import logoDark from './assets/logo dark.png';
+import logoDark from './assets/logo_dark.png';
 import logoLight from './assets/logo_white.png';
 import { resolveAssetUrl } from './utils/assets';
 import { SlidingNumber } from './components/animate-ui/primitives/texts/sliding-number';
@@ -76,28 +76,39 @@ function App() {
   };
   
   const { cart, favorites, addToCart, fetchCart, fetchFavorites, removeFromCart } = useStore();
+  const fetchRequestId = useRef(0);
+  const fetchAbortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     fetchCart();
     fetchFavorites();
     fetchProducts();
-  }, []);
+  }, [fetchCart, fetchFavorites, fetchProducts]);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       fetchProducts(searchQuery);
     }, 500);
     return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery]);
+  }, [searchQuery, fetchProducts]);
 
   useEffect(() => {
     const photoUrl = WebApp.initDataUnsafe?.user?.photo_url || null;
     setUserPhoto(photoUrl);
   }, []);
 
-  const fetchProducts = async (q = '') => {
+  const fetchProducts = useCallback(async (q = '') => {
+    fetchAbortRef.current?.abort();
+    const controller = new AbortController();
+    fetchAbortRef.current = controller;
+    const requestId = ++fetchRequestId.current;
     try {
-      const res = await apiClient.get(`/products/?search=${q}`);
+      const res = await apiClient.get(`/products/?search=${encodeURIComponent(q)}`, {
+        signal: controller.signal,
+      });
+      if (requestId !== fetchRequestId.current) {
+        return;
+      }
       const payload = res.data as unknown;
       if (Array.isArray(payload)) {
         setProducts(payload);
@@ -119,10 +130,13 @@ function App() {
       }
       setProducts([]);
     } catch (e) {
+      if (controller.signal.aborted) {
+        return;
+      }
       console.error(e);
       setProducts([]);
     }
-  };
+  }, []);
 
   const handleTabChange = (tab: string) => {
     if (tab === activeTab) return;
@@ -215,11 +229,19 @@ function App() {
     }
   };
 
+  const [logoFailed, setLogoFailed] = useState(false);
+
+  useEffect(() => {
+    setLogoFailed(false);
+  }, [isDark]);
+
+  const cartProductIds = useMemo(() => new Set(cart.map(item => item.product.id)), [cart]);
+
   const renderContent = () => {
     if (activeTab === 'home') {
       return (
         <div className="space-y-6">
-          <header className="flex items-center mb-6 gap-3 tg-keep-header">
+          <header className="flex items-center mb-6 gap-3">
             <div className="flex-1 flex justify-start">
               <button
                 type="button"
@@ -235,202 +257,215 @@ function App() {
               </button>
             </div>
             <div className="flex-1 flex justify-center">
-              <img
-                src={isDark ? logoLight : logoDark}
-                alt="RooneyForm"
-                className="h-9 w-auto select-none pointer-events-none"
-                draggable={false}
-              />
+              {!logoFailed ? (
+                <img
+                  src={isDark ? logoLight : logoDark}
+                  alt="RooneyForm"
+                  className="h-9 w-auto select-none pointer-events-none"
+                  draggable={false}
+                  onError={() => setLogoFailed(true)}
+                />
+              ) : (
+                <span className="text-base font-semibold tracking-wide text-tg-text">
+                  Rooneyform
+                </span>
+              )}
             </div>
             <div className="flex-1 flex justify-end">
               {avatarNode}
             </div>
           </header>
 
-          {catalogFilter === 'jerseys' && (
-            <div className="glass-card rounded-3xl p-4 relative overflow-hidden">
-              <div className="flex items-center justify-between gap-3">
-                <div className="space-y-1">
-                  <ShimmeringText
-                    text="Быстрый подбор"
-                    className="text-[11px] uppercase tracking-[0.3em]"
-                    color={isDark ? 'rgba(255,255,255,0.85)' : '#1f2937'}
-                    shimmeringColor={isDark ? 'rgba(191,219,254,0.9)' : '#60a5fa'}
+          <div className="space-y-6 tg-content-offset">
+            {catalogFilter === 'jerseys' && (
+              <div className="glass-card rounded-3xl p-4 relative overflow-hidden">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="space-y-1">
+                    <ShimmeringText
+                      text="Быстрый подбор"
+                      className="text-[11px] uppercase tracking-[0.3em]"
+                      color={isDark ? 'rgba(255,255,255,0.85)' : '#1f2937'}
+                      shimmeringColor={isDark ? 'rgba(191,219,254,0.9)' : '#60a5fa'}
+                    />
+                    <p className="text-sm text-[var(--tg-theme-hint-color)]">
+                      Подберите размер и сортировку под свой стиль.
+                    </p>
+                  </div>
+                  <HighlightText
+                    text={`${filteredProducts.length} в наличии`}
+                    className={`text-[10px] uppercase tracking-[0.2em] ${isDark ? 'text-blue-100' : 'text-blue-700'}`}
+                    style={highlightStyle}
+                    inViewOnce
                   />
-                  <p className="text-sm text-[var(--tg-theme-hint-color)]">
-                    Подберите размер и сортировку под свой стиль.
-                  </p>
                 </div>
-                <HighlightText
-                  text={`${filteredProducts.length} в наличии`}
-                  className={`text-[10px] uppercase tracking-[0.2em] ${isDark ? 'text-blue-100' : 'text-blue-700'}`}
-                  style={highlightStyle}
-                  inViewOnce
-                />
-              </div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => setSizeFilter('all')}
-                  className={`px-3 py-1.5 rounded-full text-xs uppercase tracking-wide transition ${
-                    sizeFilter === 'all'
-                      ? 'bg-blue-600 text-white'
-                      : isDark
-                        ? 'bg-white/10 text-white/80 hover:bg-white/20'
-                        : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-300'
-                  }`}
-                >
-                  Все размеры
-                </button>
-                {sizeOptions.map((size) => (
+                <div className="mt-4 flex flex-wrap gap-2">
                   <button
-                    key={size}
                     type="button"
-                    onClick={() => setSizeFilter(size)}
+                    onClick={() => setSizeFilter('all')}
                     className={`px-3 py-1.5 rounded-full text-xs uppercase tracking-wide transition ${
-                      sizeFilter === size
+                      sizeFilter === 'all'
                         ? 'bg-blue-600 text-white'
                         : isDark
                           ? 'bg-white/10 text-white/80 hover:bg-white/20'
                           : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-300'
                     }`}
                   >
-                    {size}
+                    Все размеры
                   </button>
-                ))}
+                  {sizeOptions.map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => setSizeFilter(size)}
+                      className={`px-3 py-1.5 rounded-full text-xs uppercase tracking-wide transition ${
+                        sizeFilter === size
+                          ? 'bg-blue-600 text-white'
+                          : isDark
+                            ? 'bg-white/10 text-white/80 hover:bg-white/20'
+                            : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-300'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-4 flex items-center gap-3">
+                  <span className="text-xs uppercase tracking-[0.25em] text-[var(--tg-theme-hint-color)]">
+                    Сортировка
+                  </span>
+                  <select
+                    value={sortOption}
+                    onChange={(event) => setSortOption(event.target.value as typeof sortOption)}
+                    className={`flex-1 rounded-2xl px-3 py-2 text-sm outline-none ${
+                      isDark
+                        ? 'bg-white/10 text-white border border-white/10 focus:border-blue-300/60'
+                        : 'bg-white text-gray-700 border border-gray-200 focus:border-blue-400'
+                    }`}
+                  >
+                    <option value="default">По умолчанию</option>
+                    <option value="price-asc">Сначала дешевле</option>
+                    <option value="price-desc">Сначала дороже</option>
+                    <option value="name-asc">По названию</option>
+                  </select>
+                </div>
               </div>
-              <div className="mt-4 flex items-center gap-3">
-                <span className="text-xs uppercase tracking-[0.25em] text-[var(--tg-theme-hint-color)]">
-                  Сортировка
-                </span>
-                <select
-                  value={sortOption}
-                  onChange={(event) => setSortOption(event.target.value as typeof sortOption)}
-                  className={`flex-1 rounded-2xl px-3 py-2 text-sm outline-none ${
-                    isDark
-                      ? 'bg-white/10 text-white border border-white/10 focus:border-blue-300/60'
-                      : 'bg-white text-gray-700 border border-gray-200 focus:border-blue-400'
-                  }`}
-                >
-                  <option value="default">По умолчанию</option>
-                  <option value="price-asc">Сначала дешевле</option>
-                  <option value="price-desc">Сначала дороже</option>
-                  <option value="name-asc">По названию</option>
-                </select>
-              </div>
+            )}
+
+            <div className="relative">
+              <Search className={`absolute left-3 top-3.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} size={20} />
+              <input 
+                type="text" 
+                placeholder="Поиск винтажных футболок..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`w-full rounded-2xl py-3 pl-10 pr-4 focus:outline-none focus:border-blue-500/50 transition-colors ${
+                  isDark
+                    ? 'bg-white/5 border border-white/10 text-white placeholder-gray-500'
+                    : 'bg-white border border-gray-200 text-gray-900 placeholder-gray-500 shadow-sm'
+                }`}
+              />
             </div>
-          )}
 
-          <div className="relative">
-            <Search className={`absolute left-3 top-3.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} size={20} />
-            <input 
-              type="text" 
-              placeholder="Поиск винтажных футболок..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full rounded-2xl py-3 pl-10 pr-4 focus:outline-none focus:border-blue-500/50 transition-colors ${
-                isDark
-                  ? 'bg-white/5 border border-white/10 text-white placeholder-gray-500'
-                  : 'bg-white border border-gray-200 text-gray-900 placeholder-gray-500 shadow-sm'
-              }`}
-            />
-          </div>
-
-           {/* Carousel / Featured - Using first 3 products */}
-          {!searchQuery && (
-            <div className="space-y-3">
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  className={`px-3 py-1.5 rounded-full text-sm ${
-                    catalogFilter === 'jerseys'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white/10 text-[var(--tg-theme-text-color)]'
-                  }`}
-                  onClick={() => setCatalogFilter('jerseys')}
-                >
-                  Футболки
-                </button>
-                <button
-                  type="button"
-                  className={`px-3 py-1.5 rounded-full text-sm ${
-                    catalogFilter === 'posters'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white/10 text-[var(--tg-theme-text-color)]'
-                  }`}
-                  onClick={() => setCatalogFilter('posters')}
-                >
-                  Плакаты
-                </button>
+             {/* Carousel / Featured - Using first 3 products */}
+            {!searchQuery && (
+              <div className="space-y-3">
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    className={`px-3 py-1.5 rounded-full text-sm ${
+                      catalogFilter === 'jerseys'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-white/10 text-[var(--tg-theme-text-color)]'
+                    }`}
+                    onClick={() => setCatalogFilter('jerseys')}
+                  >
+                    Футболки
+                  </button>
+                  <button
+                    type="button"
+                    className={`px-3 py-1.5 rounded-full text-sm ${
+                      catalogFilter === 'posters'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-white/10 text-[var(--tg-theme-text-color)]'
+                    }`}
+                    onClick={() => setCatalogFilter('posters')}
+                  >
+                    Плакаты
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {catalogFilter === 'jerseys' ? (
-            <div className="grid grid-cols-2 gap-4">
-              {filteredProducts.map(product => (
+            {catalogFilter === 'jerseys' ? (
+              <div className="grid grid-cols-2 gap-4">
+                {filteredProducts.map(product => (
                 <ProductCard 
                   key={product.id} 
                   product={product} 
                   onClick={() => setSelectedProduct(product)}
                   onAdd={(e) => {
                     e.stopPropagation();
-                    addToCart(product.id);
+                    if (!cartProductIds.has(product.id)) {
+                      addToCart(product.id);
+                    }
                   }}
+                  inCart={cartProductIds.has(product.id)}
                 />
               ))}
             </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-4">
-              {posterCatalog.map((poster) => (
-                <div key={poster.id} className="rounded-3xl overflow-hidden relative shadow-lg">
-                  <img src={poster.image} alt={poster.title} className="w-full h-48 object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 to-transparent p-4 flex flex-col justify-end space-y-1">
-                    <ShimmeringText
-                      text="Плакаты"
-                      className="text-xs uppercase tracking-widest"
-                      color="rgba(191,219,254,0.9)"
-                      shimmeringColor="rgba(226,232,240,0.95)"
-                    />
-                    <h3 className="font-semibold text-white">{poster.title}</h3>
-                    <p className="text-xs text-white/70">{poster.subtitle}</p>
-                    <div className="flex items-center justify-between text-white text-sm mt-1">
-                      <span>{formatPrice(poster.price)}</span>
-                      <RippleButton asChild hoverScale={1.03} tapScale={0.97}>
-                        <button
-                          type="button"
-                          className="px-3 py-1 rounded-full bg-white/20 hover:bg-white/30 text-xs uppercase tracking-wide"
-                          onClick={() => alert('Каталог плакатов скоро будет доступен')}
-                        >
-                          Смотреть
-                          <RippleButtonRipples color="rgba(255,255,255,0.45)" />
-                        </button>
-                      </RippleButton>
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                {posterCatalog.map((poster) => (
+                  <div key={poster.id} className="rounded-3xl overflow-hidden relative shadow-lg">
+                    <img src={poster.image} alt={poster.title} className="w-full h-48 object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 to-transparent p-4 flex flex-col justify-end space-y-1">
+                      <ShimmeringText
+                        text="Плакаты"
+                        className="text-xs uppercase tracking-widest"
+                        color="rgba(191,219,254,0.9)"
+                        shimmeringColor="rgba(226,232,240,0.95)"
+                      />
+                      <h3 className="font-semibold text-white">{poster.title}</h3>
+                      <p className="text-xs text-white/70">{poster.subtitle}</p>
+                      <div className="flex items-center justify-between text-white text-sm mt-1">
+                        <span>{formatPrice(poster.price)}</span>
+                        <RippleButton asChild hoverScale={1.03} tapScale={0.97}>
+                          <button
+                            type="button"
+                            className="px-3 py-1 rounded-full bg-white/20 hover:bg-white/30 text-xs uppercase tracking-wide"
+                            onClick={() => alert('Каталог плакатов скоро будет доступен')}
+                          >
+                            Смотреть
+                            <RippleButtonRipples color="rgba(255,255,255,0.45)" />
+                          </button>
+                        </RippleButton>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-          
-          {catalogFilter === 'jerseys' && filteredProducts.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-20 text-gray-500">
-              <Loader2 className="animate-spin mb-2" />
-              <p>Не нашли позиции под текущие фильтры.</p>
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+            
+            {catalogFilter === 'jerseys' && filteredProducts.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+                <Loader2 className="animate-spin mb-2" />
+                <p>Не нашли позиции под текущие фильтры.</p>
+              </div>
+            )}
+          </div>
         </div>
       );
     }
 
     if (activeTab === 'cart') {
       const total = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+      const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
       return (
-        <div className="space-y-6">
+        <div className="space-y-6 tg-content-offset">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-[var(--tg-theme-hint-color)]">Всего позиций</p>
-              <h2 className="text-2xl font-bold text-[var(--tg-theme-text-color)]">{cart.length}</h2>
+              <h2 className="text-2xl font-bold text-[var(--tg-theme-text-color)]">{cartCount}</h2>
             </div>
             {cart.length > 0 && (
               <div className="px-4 py-2 rounded-2xl bg-blue-50 text-blue-600 text-sm font-semibold">
@@ -533,7 +568,7 @@ function App() {
 
     if (activeTab === 'favorites') {
       return (
-         <div className="space-y-4">
+         <div className="space-y-4 tg-content-offset">
             <div className="mb-6">
               <GradientText text="Избранное" className="text-2xl font-bold" neon={!isDark} />
             </div>
@@ -555,8 +590,11 @@ function App() {
                             onClick={() => setSelectedProduct(fav.product)}
                             onAdd={(e) => {
                                 e.stopPropagation();
-                                addToCart(fav.product.id);
+                                if (!cartProductIds.has(fav.product.id)) {
+                                  addToCart(fav.product.id);
+                                }
                             }}
+                            inCart={cartProductIds.has(fav.product.id)}
                         />
                     ))}
                 </div>

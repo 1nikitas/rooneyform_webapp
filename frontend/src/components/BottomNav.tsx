@@ -8,7 +8,7 @@ interface BottomNavProps {
 }
 
 export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onTabChange }) => {
-    const cartCount = useStore(state => state.cart.length);
+    const cartCount = useStore(state => state.cart.reduce((sum, item) => sum + item.quantity, 0));
 
     return (
         <div className="fixed tg-safe-nav left-1/2 z-50 h-16 w-[min(420px,calc(100%-32px))] -translate-x-1/2 glass rounded-2xl flex justify-around items-center px-2">

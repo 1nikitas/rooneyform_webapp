@@ -84,9 +84,9 @@ async def add_to_cart(
     cart_item = result.scalar_one_or_none()
     
     if cart_item:
-        cart_item.quantity += item.quantity
+        cart_item.quantity = 1
     else:
-        cart_item = CartItem(user_id=user_id, product_id=item.product_id, quantity=item.quantity)
+        cart_item = CartItem(user_id=user_id, product_id=item.product_id, quantity=1)
         db.add(cart_item)
     
     await db.commit()

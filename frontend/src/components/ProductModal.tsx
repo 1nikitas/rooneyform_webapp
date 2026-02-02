@@ -21,7 +21,7 @@ interface ProductModalProps {
 }
 
 export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
-    const { addToCart, toggleFavorite, favorites } = useStore();
+    const { addToCart, toggleFavorite, favorites, cart } = useStore();
     const [activeIndex, setActiveIndex] = useState(0);
     const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
@@ -31,6 +31,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
 
     const isLiked = favorites.some(f => f.product.id === product.id);
     const images = product.gallery?.length ? product.gallery : [product.image_url];
+    const inCart = cart.some(item => item.product.id === product.id);
 
     useEffect(() => {
         setActiveIndex(0);
@@ -119,7 +120,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                                     e.stopPropagation();
                                     onClose();
                                 }}
-                                className="absolute top-4 right-4 z-20 bg-black/30 backdrop-blur-md p-2 rounded-full text-white"
+                                className="absolute top-3 right-3 z-20 bg-black/30 backdrop-blur-md p-2 rounded-full text-white"
                             >
                                 <X size={24} />
                             </button>
@@ -165,15 +166,24 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                                 </button>
                                 <RippleButton asChild hoverScale={1.02} tapScale={0.97}>
                                     <button 
-                                        onClick={() => {
-                                            addToCart(product.id);
-                                            onClose();
+                                        onClick={async () => {
+                                            if (!inCart) {
+                                                const ok = await addToCart(product.id);
+                                                if (ok) {
+                                                    onClose();
+                                                }
+                                            }
                                         }}
-                                        className="col-span-3 py-3.5 bg-blue-600 rounded-xl text-white font-semibold flex items-center justify-center gap-2 active:scale-95 transition-transform"
+                                        disabled={inCart}
+                                        className={`col-span-3 py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2 active:scale-95 transition-transform ${
+                                            inCart
+                                                ? 'bg-emerald-500/15 text-emerald-600 cursor-default'
+                                                : 'bg-blue-600 text-white'
+                                        }`}
                                     >
                                         <ShoppingCart size={20} />
-                                        Добавить в корзину
-                                        <RippleButtonRipples color="rgba(255,255,255,0.4)" />
+                                        {inCart ? 'Уже в корзине' : 'Добавить в корзину'}
+                                        {!inCart && <RippleButtonRipples color="rgba(255,255,255,0.4)" />}
                                     </button>
                                 </RippleButton>
                             </div>

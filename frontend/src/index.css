@@ -16,6 +16,7 @@
   --tg-top-extra: 28px;
   --tg-modal-extra: 16px;
   --tg-close-extra: 0px;
+  --tg-content-offset: 0px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -44,6 +45,10 @@ body {
   padding-bottom: calc(96px + var(--safe-area-bottom));
 }
 
+.tg-content-offset {
+  margin-top: var(--tg-content-offset);
+}
+
 .tg-safe-nav {
   bottom: calc(16px + var(--safe-area-bottom));
 }
@@ -60,16 +65,13 @@ body {
   padding-top: calc(12px + var(--safe-area-top) + var(--tg-viewport-offset-top) + var(--tg-top-extra) + var(--tg-modal-extra));
 }
 
-.tg-keep-header {
-  margin-top: calc(-1 * (var(--safe-area-top) + var(--tg-viewport-offset-top) + var(--tg-top-extra)));
-  padding-top: calc(var(--safe-area-top) + var(--tg-viewport-offset-top));
-}
 
 @media (max-width: 640px) {
   :root {
     --tg-top-extra: 72px;
     --tg-modal-extra: 28px;
     --tg-close-extra: 4px;
+    --tg-content-offset: 5vh;
   }
 }
 
@@ -80,6 +82,7 @@ body {
   -webkit-backdrop-filter: blur(15px);
   border: 1px solid rgba(15, 23, 42, 0.06);
   box-shadow: 0 18px 35px rgba(15, 23, 42, 0.08);
+  color: var(--tg-theme-text-color);
 }
 
 .glass-card {
@@ -88,6 +91,7 @@ body {
   -webkit-backdrop-filter: blur(18px);
   border: 1px solid rgba(15, 23, 42, 0.05);
   box-shadow: 0 24px 45px rgba(15, 23, 42, 0.08);
+  color: var(--tg-theme-text-color);
 }
 
 @media (prefers-color-scheme: dark) {

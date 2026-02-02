@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import type { Product } from '../types';
-import { Plus } from 'lucide-react';
+import { Check, Plus } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { formatPrice } from '../utils/currency';
 import { resolveAssetUrl } from '../utils/assets';
@@ -11,9 +11,10 @@ interface ProductCardProps {
     product: Product;
     onClick: () => void;
     onAdd: (e: React.MouseEvent) => void;
+    inCart?: boolean;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, onClick, onAdd }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, onClick, onAdd, inCart = false }) => {
     const coverImage = product.gallery?.[0] || product.image_url;
     const { theme } = useTheme();
     const isDark = theme === 'dark';
@@ -53,13 +54,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onClick, onAd
                         </motion.p>
                         <button
                             onClick={onAdd}
+                            disabled={inCart}
                             className={`p-1.5 rounded-full transition-colors ${
-                                isDark
-                                    ? 'bg-white/20 hover:bg-white/40 text-white'
-                                    : 'bg-white/80 text-gray-900 hover:bg-white'
+                                inCart
+                                    ? isDark
+                                        ? 'bg-emerald-500/20 text-emerald-200 cursor-default'
+                                        : 'bg-emerald-500/15 text-emerald-600 cursor-default'
+                                    : isDark
+                                        ? 'bg-white/20 hover:bg-white/40 text-white'
+                                        : 'bg-white/80 text-gray-900 hover:bg-white'
                             }`}
                         >
-                            <Plus size={16} />
+                            {inCart ? <Check size={16} /> : <Plus size={16} />}
                         </button>
                     </div>
                 </div>
