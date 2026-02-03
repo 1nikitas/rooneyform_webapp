@@ -47,6 +47,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
     const images = product.gallery?.length ? product.gallery : [product.image_url];
     const inCart = cart.some(item => item.product.id === product.id) || pendingCartIds.includes(product.id);
     const hasMultipleImages = images.length > 1;
+    const closeFullscreen = () => setIsFullscreen(false);
 
     return (
         <AnimatePresence>
@@ -196,7 +197,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                         </div>
 
                         {/* Content */}
-                        <div className="flex-1 overflow-y-auto overscroll-contain p-5 pb-safe-bottom">
+                        <div className="flex-1 overflow-y-auto overscroll-contain p-5 pb-safe">
                             {/* Title & Price */}
                             <div className="flex justify-between items-start gap-4 mb-4">
                                 <div className="flex-1 min-w-0">
@@ -239,13 +240,16 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                         </div>
 
                         {/* Bottom Actions - Fixed */}
-                        <div className={`
-                            flex-shrink-0 p-4 pb-6
-                            ${isDark 
-                                ? 'bg-[#0f0f11] border-t border-white/[0.06]' 
-                                : 'bg-white border-t border-black/[0.04]'
-                            }
-                        `}>
+                        <div
+                            className={`
+                                flex-shrink-0 p-4 pb-6
+                                ${isDark 
+                                    ? 'bg-[#0f0f11] border-t border-white/[0.06]' 
+                                    : 'bg-white border-t border-black/[0.04]'
+                                }
+                            `}
+                            style={{ paddingBottom: 'calc(var(--safe-area-bottom-effective) + 18px)' }}
+                        >
                             <div className="flex gap-3">
                                 {/* Favorite button */}
                                 <motion.button
@@ -318,16 +322,30 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                className="fixed inset-0 bg-black z-[80] flex flex-col"
+                                drag="y"
+                                dragConstraints={{ top: -40, bottom: 180 }}
+                                dragElastic={0.2}
+                                onDragEnd={(_, info) => {
+                                    if (info.offset.y > 120 || info.velocity.y > 1000) {
+                                        closeFullscreen();
+                                    }
+                                }}
+                                className="fixed inset-0 z-[80] flex flex-col bg-gradient-to-b from-black via-black/92 to-black"
+                                style={{
+                                    paddingTop: 'calc(var(--safe-area-top-effective) + 10px)',
+                                    paddingBottom: 'calc(var(--safe-area-bottom-effective) + 12px)',
+                                }}
                             >
                                 {/* Header */}
-                                <div className="flex justify-between items-center p-4 pt-safe-top">
-                                    <span className="text-white/60 text-sm">
-                                        {activeIndex + 1} / {images.length}
-                                    </span>
+                                <div className="flex items-center justify-between px-4 pb-3">
+                                    <div className="h-10 px-3 rounded-full bg-white/10 text-white/80 text-sm font-medium backdrop-blur-md border border-white/10 flex items-center gap-2 shadow-lg">
+                                        <span>{activeIndex + 1} / {images.length}</span>
+                                        <span className="w-1 h-1 rounded-full bg-white/30" />
+                                        <span className="text-white/60">Свайп вниз, чтобы закрыть</span>
+                                    </div>
                                     <button
-                                        onClick={() => setIsFullscreen(false)}
-                                        className="w-10 h-10 rounded-xl bg-white/10 text-white flex items-center justify-center tap-target"
+                                        onClick={closeFullscreen}
+                                        className="w-11 h-11 rounded-full bg-white/12 text-white flex items-center justify-center tap-target backdrop-blur-lg border border-white/15 shadow-[0_10px_30px_rgba(0,0,0,0.4)]"
                                         aria-label="Закрыть"
                                     >
                                         <X size={20} />
@@ -344,13 +362,13 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                                 >
                                     {images.map((image) => (
                                         <SwiperSlide key={`${image}-fullscreen`}>
-                                            <div className="h-full w-full flex items-center justify-center p-4">
+                                            <div className="h-full w-full flex items-center justify-center px-5">
                                                 <img
                                                     src={resolveAssetUrl(image)}
                                                     alt={product.name}
                                                     loading="lazy"
                                                     decoding="async"
-                                                    className="max-h-full max-w-full object-contain"
+                                                    className="max-h-[calc(var(--tg-viewport-height)-120px)] max-w-full object-contain drop-shadow-2xl"
                                                 />
                                             </div>
                                         </SwiperSlide>

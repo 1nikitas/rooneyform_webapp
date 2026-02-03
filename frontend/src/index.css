@@ -22,13 +22,20 @@
   /* ─── Safe Areas (Telegram WebView) ─── */
   --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-top-runtime: 0px;
+  --safe-area-bottom-runtime: 0px;
+  --safe-area-top-effective: max(var(--safe-area-top), var(--safe-area-top-runtime));
+  --safe-area-bottom-effective: max(var(--safe-area-bottom), var(--safe-area-bottom-runtime));
   --tg-viewport-offset-top: var(--tg-viewport-stable-offset-top, 0px);
+  --tg-viewport-height: 100vh;
   
   /* ─── Telegram Spacing ─── */
   --tg-header-height: 56px;
   --tg-main-button-height: 58px;
+  --tg-main-button-height-runtime: 0px;
+  --tg-main-button-height-effective: max(var(--tg-main-button-height), var(--tg-main-button-height-runtime));
   --tg-bottom-nav-height: 64px;
-  --tg-bottom-safe-spacing: calc(var(--safe-area-bottom) + var(--tg-main-button-height) + 16px);
+  --tg-bottom-safe-spacing: calc(var(--safe-area-bottom-effective) + var(--tg-main-button-height-effective) + 16px);
   
   /* ─── Typography Scale (Major Third — 1.25) ─── */
   --font-size-2xs: 0.625rem;   /* 10px */
@@ -156,7 +163,7 @@ body {
 
 /* Main container with proper safe areas */
 .tg-safe-container {
-  padding-top: calc(var(--safe-area-top) + var(--space-4));
+  padding-top: calc(var(--safe-area-top-effective) + var(--space-4));
   padding-bottom: calc(var(--tg-bottom-safe-spacing) + var(--tg-bottom-nav-height));
   min-height: 100dvh;
   min-height: -webkit-fill-available;
@@ -164,7 +171,7 @@ body {
 
 /* Bottom navigation positioning */
 .tg-safe-nav {
-  bottom: calc(var(--safe-area-bottom) + var(--tg-main-button-height) + var(--space-4));
+  bottom: calc(var(--safe-area-bottom-effective) + var(--tg-main-button-height-effective) + var(--space-3));
 }
 
 /* Modal sheet positioning */
@@ -180,7 +187,24 @@ body {
 
 /* Fullscreen overlay top padding */
 .tg-fullscreen-top {
-  padding-top: calc(var(--safe-area-top) + var(--space-4));
+  padding-top: calc(var(--safe-area-top-effective) + var(--space-4));
+}
+
+/* Utility paddings for safe areas */
+.pt-safe {
+  padding-top: calc(var(--safe-area-top-effective) + var(--space-4));
+}
+
+.pb-safe {
+  padding-bottom: calc(var(--safe-area-bottom-effective) + var(--space-3));
+}
+
+.pb-safe-main {
+  padding-bottom: calc(var(--safe-area-bottom-effective) + var(--tg-main-button-height-effective) + var(--space-4));
+}
+
+.fixed-safe-bottom {
+  bottom: calc(var(--safe-area-bottom-effective) + var(--tg-main-button-height-effective) + var(--space-3));
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
