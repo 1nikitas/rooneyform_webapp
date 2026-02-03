@@ -11,6 +11,7 @@ import { SlidingNumber } from '../components/animate-ui/primitives/texts/sliding
 const DAY_MS = 24 * 60 * 60 * 1000;
 const MAX_SLIDER_DAYS = 30;
 const DEFAULT_RANGE_DAYS = 7;
+const PRODUCT_LIMIT = 500;
 
 const ORDER_STATUS_VARIANTS = {
   received: {
@@ -154,7 +155,7 @@ export default function AdminApp() {
   }, [products, isPosterTab]);
 
   const loadProducts = async () => {
-    const res = await apiClient.get('/products/');
+    const res = await apiClient.get(`/products/?limit=${PRODUCT_LIMIT}`);
     setProducts(res.data);
   };
   const loadOrders = async (customStart?: Date, customEnd?: Date) => {

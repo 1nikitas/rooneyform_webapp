@@ -37,6 +37,30 @@ def _safe_extension(filename: str, content_type: Optional[str]) -> str:
         return ".webp"
     return ".jpg"
 
+
+def _parse_iso_datetime(value: str) -> datetime:
+    if value.endswith("Z"):
+        value = value.replace("Z", "+00:00")
+    return datetime.fromisoformat(value)
+
+
+async def _get_product_with_media(
+    db: AsyncSession,
+    request: Request,
+    product_id: int,
+) -> Product:
+    result = await db.execute(
+        select(Product)
+        .options(
+            selectinload(Product.category),
+            selectinload(Product.gallery_images),
+        )
+        .where(Product.id == product_id)
+    )
+    product = result.scalar_one()
+    normalize_product_media(str(request.base_url), product)
+    return product
+
 @router.post("/uploads/", response_model=UploadResponse)
 async def upload_images(files: List[UploadFile] = File(...)):
     if not files:
@@ -64,10 +88,11 @@ async def get_products(
     request: Request,
     search: Optional[str] = None,
     category_slug: Optional[str] = None,
-    limit: int = 20,
+    limit: int = 300,
     offset: int = 0,
     db: AsyncSession = Depends(get_db),
 ):
+    limit = max(1, min(limit, 500))
     query = (
         select(Product)
         .options(
@@ -117,7 +142,11 @@ async def get_product(
     return product
 
 @router.post("/products/", response_model=ProductSchema, status_code=status.HTTP_201_CREATED)
-async def create_product(payload: ProductCreate, db: AsyncSession = Depends(get_db)):
+async def create_product(
+    request: Request,
+    payload: ProductCreate,
+    db: AsyncSession = Depends(get_db),
+):
     cat_stmt = select(Category).where(Category.slug == payload.category_slug)
     cat_res = await db.execute(cat_stmt)
     category = cat_res.scalar_one_or_none()
@@ -156,12 +185,20 @@ async def create_product(payload: ProductCreate, db: AsyncSession = Depends(get_
                 db.add(ProductImage(product_id=product.id, image_url=image))
 
     await db.commit()
-    await db.refresh(product)
-    return product
+    return await _get_product_with_media(db, request, product.id)
 
 @router.put("/products/{product_id}", response_model=ProductSchema)
-async def update_product(product_id: int, payload: ProductUpdate, db: AsyncSession = Depends(get_db)):
-    stmt = select(Product).where(Product.id == product_id)
+async def update_product(
+    product_id: int,
+    request: Request,
+    payload: ProductUpdate,
+    db: AsyncSession = Depends(get_db),
+):
+    stmt = (
+        select(Product)
+        .options(selectinload(Product.gallery_images))
+        .where(Product.id == product_id)
+    )
     res = await db.execute(stmt)
     product = res.scalar_one_or_none()
     if not product:
@@ -186,15 +223,19 @@ async def update_product(product_id: int, payload: ProductUpdate, db: AsyncSessi
         cat_res = await db.execute(cat_stmt)
         category = cat_res.scalar_one_or_none()
         if not category:
-            raise HTTPException(status_code=404, detail="Category not found")
+            category = Category(
+                name=(payload.category_slug or "").replace("-", " ").title(),
+                slug=payload.category_slug,
+            )
+            db.add(category)
+            await db.flush()
         product.category_id = category.id
 
     for field, value in payload.model_dump(exclude_unset=True, exclude={"category_slug", "gallery"}).items():
         setattr(product, field, value)
 
     await db.commit()
-    await db.refresh(product)
-    return product
+    return await _get_product_with_media(db, request, product.id)
 
 @router.delete("/products/{product_id}")
 async def delete_product(product_id: int, db: AsyncSession = Depends(get_db)):
@@ -218,13 +259,13 @@ async def get_orders(
 
     if start_date:
         try:
-            start_dt = datetime.fromisoformat(start_date)
+            start_dt = _parse_iso_datetime(start_date)
             query = query.where(Order.created_at >= start_dt)
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid start date")
     if end_date:
         try:
-            end_dt = datetime.fromisoformat(end_date)
+            end_dt = _parse_iso_datetime(end_date)
             query = query.where(Order.created_at <= end_dt)
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid end date")

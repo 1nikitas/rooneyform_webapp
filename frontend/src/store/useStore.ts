@@ -27,7 +27,8 @@ export const useStore = create<AppState>((set, get) => ({
             const unique = new Map<number, CartItem>();
             for (const item of items) {
                 if (!unique.has(item.product.id)) {
-                    unique.set(item.product.id, { ...item, quantity: 1 });
+                    const normalizedQuantity = Math.max(1, Number(item.quantity ?? 1));
+                    unique.set(item.product.id, { ...item, quantity: normalizedQuantity });
                 }
             }
             set({ cart: Array.from(unique.values()) });

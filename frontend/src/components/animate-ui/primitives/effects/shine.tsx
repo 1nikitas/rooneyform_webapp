@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 
 type ShineProps = React.ComponentProps<'div'> & {
   color?: string;

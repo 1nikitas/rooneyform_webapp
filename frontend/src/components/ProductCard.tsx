@@ -5,71 +5,126 @@ import { Check, Plus } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { formatPrice } from '../utils/currency';
 import { resolveAssetUrl } from '../utils/assets';
-import { Shine } from './animate-ui/primitives/effects/shine';
 
 interface ProductCardProps {
     product: Product;
     onClick: () => void;
     onAdd: (e: React.MouseEvent) => void;
     inCart?: boolean;
+    enableSharedLayout?: boolean;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, onClick, onAdd, inCart = false }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({
+    product,
+    onClick,
+    onAdd,
+    inCart = false,
+    enableSharedLayout = true,
+}) => {
     const coverImage = product.gallery?.[0] || product.image_url;
-    const { theme } = useTheme();
-    const isDark = theme === 'dark';
+    const { isDark } = useTheme();
+    const shouldAnimate = enableSharedLayout;
 
     return (
-        <Shine
-            asChild
-            enableOnHover
-            loop
-            loopDelay={2200}
-            duration={1100}
-            opacity={0.28}
-            color={isDark ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.8)'}
+        <motion.article
+            layoutId={shouldAnimate ? `card-${product.id}` : undefined}
+            onClick={onClick}
+            className={`
+                relative overflow-hidden rounded-2xl cursor-pointer
+                ${isDark 
+                    ? 'bg-[#1a1a1d] border border-white/[0.06]' 
+                    : 'bg-white border border-black/[0.04]'
+                }
+                shadow-card hover:shadow-card-hover
+                transition-shadow duration-300
+            `}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
         >
-            <motion.div
-                layoutId={`card-${product.id}`}
-                onClick={onClick}
-                className="glass-card rounded-2xl overflow-hidden relative group"
-                whileTap={{ scale: 0.98 }}
-            >
-                <div className={`aspect-[3/4] overflow-hidden ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}>
-                    <motion.img
-                        layoutId={`image-${product.id}`}
-                        src={resolveAssetUrl(coverImage)}
-                        alt={product.name}
-                        className="w-full h-full object-cover"
-                    />
-                </div>
-
-                <div className="p-3 absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent pt-10">
-                    <motion.h3 layoutId={`title-${product.id}`} className="text-white font-semibold text-sm truncate">
+            {/* Image Container */}
+            <div className={`
+                relative aspect-[3/4] overflow-hidden
+                ${isDark ? 'bg-[#0f0f11]' : 'bg-gray-50'}
+            `}>
+                <motion.img
+                    layoutId={shouldAnimate ? `image-${product.id}` : undefined}
+                    src={resolveAssetUrl(coverImage)}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                />
+                
+                {/* Gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent" />
+                
+                {/* Size badge */}
+                {product.size && (
+                    <div className={`
+                        absolute top-3 left-3 
+                        px-2.5 py-1 rounded-lg
+                        text-[11px] font-semibold uppercase tracking-wide
+                        ${isDark 
+                            ? 'bg-black/40 text-white/90 backdrop-blur-sm' 
+                            : 'bg-white/90 text-gray-700 shadow-sm backdrop-blur-sm'
+                        }
+                    `}>
+                        {product.size}
+                    </div>
+                )}
+                
+                {/* Add to cart button */}
+                <motion.button
+                    onClick={onAdd}
+                    disabled={inCart}
+                    className={`
+                        absolute top-3 right-3
+                        w-10 h-10 rounded-xl
+                        flex items-center justify-center
+                        transition-all duration-200
+                        tap-target
+                        ${inCart
+                            ? 'bg-tg-success/20 text-tg-success cursor-default backdrop-blur-sm'
+                            : isDark
+                                ? 'bg-white/15 text-white hover:bg-white/25 active:bg-white/30 backdrop-blur-sm'
+                                : 'bg-white/90 text-gray-700 hover:bg-white active:bg-gray-100 shadow-sm backdrop-blur-sm'
+                        }
+                    `}
+                    whileTap={inCart ? undefined : { scale: 0.9 }}
+                    aria-label={inCart ? 'В корзине' : 'Добавить в корзину'}
+                >
+                    {inCart ? (
+                        <Check size={18} strokeWidth={2.5} />
+                    ) : (
+                        <Plus size={18} strokeWidth={2.5} />
+                    )}
+                </motion.button>
+                
+                {/* Bottom content */}
+                <div className="absolute bottom-0 left-0 right-0 p-3">
+                    <motion.h3 
+                        layoutId={shouldAnimate ? `title-${product.id}` : undefined}
+                        className="text-white font-semibold text-sm leading-tight line-clamp-2"
+                    >
                         {product.name}
                     </motion.h3>
-                    <div className="flex justify-between items-center mt-1">
-                        <motion.p layoutId={`price-${product.id}`} className="text-gray-200 text-xs font-semibold">
-                            {formatPrice(product.price)}
-                        </motion.p>
-                        <button
-                            onClick={onAdd}
-                            disabled={inCart}
-                            className={`p-1.5 rounded-full transition-colors ${
-                                inCart
-                                    ? isDark
-                                        ? 'bg-emerald-500/20 text-emerald-200 cursor-default'
-                                        : 'bg-emerald-500/15 text-emerald-600 cursor-default'
-                                    : isDark
-                                        ? 'bg-white/20 hover:bg-white/40 text-white'
-                                        : 'bg-white/80 text-gray-900 hover:bg-white'
-                            }`}
+                    
+                    <div className="flex items-center justify-between mt-2">
+                        <motion.span 
+                            layoutId={shouldAnimate ? `price-${product.id}` : undefined}
+                            className="text-white/90 text-sm font-bold"
                         >
-                            {inCart ? <Check size={16} /> : <Plus size={16} />}
-                        </button>
+                            {formatPrice(product.price)}
+                        </motion.span>
+                        
+                        {product.team && (
+                            <span className="text-white/60 text-xs truncate max-w-[50%]">
+                                {product.team}
+                            </span>
+                        )}
                     </div>
                 </div>
-            </motion.div>
-        </Shine>
+            </div>
+        </motion.article>
     );
 };

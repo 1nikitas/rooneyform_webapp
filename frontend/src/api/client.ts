@@ -32,9 +32,11 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use((config) => {
     // In dev mode outside Telegram, mock ID or use a default
     // WebApp.initDataUnsafe.user?.id
-    const userId = WebApp.initDataUnsafe?.user?.id?.toString() || '123456789';
-    if (userId) {
-        config.headers['X-Telegram-User-ID'] = userId;
+    const userId = WebApp.initDataUnsafe?.user?.id?.toString();
+    const fallbackUserId = import.meta.env.DEV ? '123456789' : undefined;
+    const headerUserId = userId ?? fallbackUserId;
+    if (headerUserId) {
+        config.headers['X-Telegram-User-ID'] = headerUserId;
     }
     if (isNgrokBackend) {
         config.headers['ngrok-skip-browser-warning'] = 'true';

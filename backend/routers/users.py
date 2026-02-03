@@ -56,14 +56,27 @@ async def get_cart(
     base_url = str(request.base_url)
     valid_items = []
     orphan_ids = []
+    duplicate_ids = []
+    seen_products = set()
+    quantity_changed = False
     for item in items:
         if not item.product:
             orphan_ids.append(item.id)
             continue
+        if item.product_id in seen_products:
+            duplicate_ids.append(item.id)
+            continue
+        seen_products.add(item.product_id)
+        if item.quantity != 1:
+            item.quantity = 1
+            quantity_changed = True
         normalize_product_media(base_url, item.product)
         valid_items.append(item)
     if orphan_ids:
         await db.execute(delete(CartItem).where(CartItem.id.in_(orphan_ids)))
+    if duplicate_ids:
+        await db.execute(delete(CartItem).where(CartItem.id.in_(duplicate_ids)))
+    if orphan_ids or duplicate_ids or quantity_changed:
         await db.commit()
     return valid_items
 
@@ -212,15 +225,16 @@ async def create_order(user_id: int = Depends(get_current_user_id), db: AsyncSes
     order = Order(total_price=0)
     for item in valid_items:
         price = float(item.product.price or 0)
+        quantity = 1
         order.items.append(
             OrderItem(
                 product_id=item.product.id,
                 product_name=item.product.name,
                 price=price,
-                quantity=item.quantity,
+                quantity=quantity,
             )
         )
-        order.total_price += price * item.quantity
+        order.total_price += price * quantity
 
     db.add(order)
     await db.flush()
