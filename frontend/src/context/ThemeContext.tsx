@@ -5,22 +5,22 @@ type ThemeMode = 'light' | 'dark';
 
 const palettes: Record<ThemeMode, Record<string, string>> = {
     light: {
-        bg: '#f8f9fc',
-        text: '#0f172a',
-        hint: '#64748b',
-        button: '#2563eb',
+        bg: '#f5f5f3',
+        text: '#101010',
+        hint: '#6a6a6a',
+        button: '#101010',
         buttonText: '#ffffff',
         secondary: '#ffffff',
-        accent: '#3b82f6',
+        accent: '#101010',
     },
     dark: {
-        bg: '#0f0f11',
-        text: '#f8fafc',
-        hint: '#94a3b8',
-        button: '#3b82f6',
-        buttonText: '#ffffff',
-        secondary: '#18181b',
-        accent: '#60a5fa',
+        bg: '#0b0b0b',
+        text: '#f5f5f5',
+        hint: '#a0a0a0',
+        button: '#f5f5f5',
+        buttonText: '#0b0b0b',
+        secondary: '#141414',
+        accent: '#f5f5f5',
     },
 };
 
@@ -45,7 +45,7 @@ const getInitialTheme = (): ThemeMode => {
         if (tgColorScheme === 'dark' || tgColorScheme === 'light') {
             return tgColorScheme;
         }
-    } catch (e) {
+    } catch {
         // Fallback if Telegram SDK not available
     }
     
@@ -87,7 +87,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 if (tgColorScheme === 'dark' || tgColorScheme === 'light') {
                     setThemeState(tgColorScheme);
                 }
-            } catch (e) {
+            } catch {
                 // Ignore
             }
         };

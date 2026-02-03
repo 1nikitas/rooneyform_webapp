@@ -29,23 +29,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <motion.article
             layoutId={shouldAnimate ? `card-${product.id}` : undefined}
             onClick={onClick}
-            className={`
-                relative overflow-hidden rounded-3xl cursor-pointer
-                ${isDark 
-                    ? 'bg-[#151517] border border-white/[0.06]' 
-                    : 'bg-white border border-black/[0.04]'
-                }
-                shadow-lg shadow-black/5 hover:shadow-xl hover:-translate-y-0.5
-                transition-all duration-300 will-change-transform
-            `}
+            className="relative overflow-hidden rounded-2xl cursor-pointer surface-card transition-all duration-300 will-change-transform hover:-translate-y-0.5 hover:shadow-md"
             whileTap={{ scale: 0.985 }}
             transition={{ type: 'spring', stiffness: 420, damping: 30 }}
         >
             {/* Image Container */}
-            <div className={`
-                relative aspect-[4/5] overflow-hidden
-                ${isDark ? 'bg-[#0f0f11]' : 'bg-gray-50'}
-            `}>
+            <div className="relative aspect-[4/5] overflow-hidden bg-[var(--tg-surface-2)]">
                 <motion.img
                     layoutId={shouldAnimate ? `image-${product.id}` : undefined}
                     src={resolveAssetUrl(coverImage)}
@@ -56,20 +45,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 />
                 
                 {/* Gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/82 via-black/30 to-black/0" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(0,0,0,0.25),transparent_35%),radial-gradient(circle_at_80%_10%,rgba(0,0,0,0.2),transparent_32%)]" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/78 via-black/25 to-transparent" />
                 
                 {/* Size badge */}
                 {product.size && (
-                    <div className={`
-                        absolute top-3 left-3 
-                        px-3 py-1.5 rounded-full
-                        text-[11px] font-semibold uppercase tracking-wide leading-none
-                        ${isDark 
-                            ? 'bg-white/10 text-white/90 backdrop-blur-md border border-white/15 shadow-[0_4px_14px_rgba(0,0,0,0.4)]' 
-                            : 'bg-white/90 text-gray-700 shadow-md backdrop-blur-md border border-white/80'
-                        }
-                    `}>
+                    <div className="absolute top-3 left-3 px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-wide leading-none bg-black/55 text-white backdrop-blur-md border border-white/15 shadow-[0_4px_14px_rgba(0,0,0,0.35)]">
                         {product.size}
                     </div>
                 )}
@@ -85,10 +65,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                         transition-all duration-200 shadow-md
                         tap-target
                         ${inCart
-                            ? 'bg-tg-success/20 text-tg-success cursor-default backdrop-blur-sm'
+                            ? 'bg-white/90 text-black cursor-default backdrop-blur-sm'
                             : isDark
-                                ? 'bg-white/12 text-white hover:bg-white/20 active:bg-white/25 backdrop-blur-md border border-white/15'
-                                : 'bg-white/95 text-gray-800 hover:bg-white active:bg-gray-100 shadow-lg backdrop-blur-md border border-black/5'
+                                ? 'bg-white/10 text-white hover:bg-white/16 active:bg-white/22 backdrop-blur-md border border-white/15'
+                                : 'bg-black/35 text-white hover:bg-black/45 active:bg-black/55 backdrop-blur-md border border-white/15'
                         }
                     `}
                     whileTap={inCart ? undefined : { scale: 0.9 }}
@@ -102,7 +82,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 </motion.button>
                 
                 {/* Bottom content */}
-                <div className="absolute inset-x-3 bottom-3 rounded-2xl border border-white/10 bg-black/35 backdrop-blur-lg p-3 shadow-[0_12px_30px_rgba(0,0,0,0.35)]">
+                <div className="absolute inset-x-3 bottom-3 rounded-2xl border border-white/10 bg-black/40 backdrop-blur-lg p-3 shadow-[0_12px_30px_rgba(0,0,0,0.35)]">
                     <motion.h3 
                         layoutId={shouldAnimate ? `title-${product.id}` : undefined}
                         className="text-white font-semibold text-[15px] leading-snug tracking-tight line-clamp-2"

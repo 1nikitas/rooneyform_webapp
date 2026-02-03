@@ -2,7 +2,6 @@ import React, { useRef, useState } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import type { PanInfo } from 'framer-motion';
 import { Trash2 } from 'lucide-react';
-import { useTheme } from '../context/ThemeContext';
 import haptics from '../utils/haptics';
 import { formatPrice } from '../utils/currency';
 import { resolveAssetUrl } from '../utils/assets';
@@ -17,7 +16,6 @@ const DELETE_THRESHOLD = -80;
 const MAX_SWIPE = -120;
 
 export const SwipeableCartItem: React.FC<SwipeableCartItemProps> = ({ item, onRemove }) => {
-  const { isDark } = useTheme();
   const x = useMotionValue(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const hasTriggeredHaptic = useRef(false);
@@ -63,12 +61,7 @@ export const SwipeableCartItem: React.FC<SwipeableCartItemProps> = ({ item, onRe
     <div className="relative overflow-hidden rounded-2xl">
       {/* Delete background */}
       <motion.div
-        className={`
-          absolute inset-y-0 right-0 w-24
-          flex items-center justify-center
-          ${isDark ? 'bg-red-500/30' : 'bg-red-500'}
-          rounded-r-2xl
-        `}
+        className="absolute inset-y-0 right-0 w-24 flex items-center justify-center rounded-r-2xl bg-[var(--tg-theme-text-color)] text-[var(--tg-theme-bg-color)]"
         style={{ opacity: deleteOpacity }}
       >
         <motion.div style={{ scale: deleteScale }} className="text-white">
@@ -84,19 +77,10 @@ export const SwipeableCartItem: React.FC<SwipeableCartItemProps> = ({ item, onRe
         onDrag={handleDrag}
         onDragEnd={handleDragEnd}
         style={{ x, opacity: contentOpacity }}
-        className={`
-          relative flex gap-4 p-3 rounded-2xl cursor-grab active:cursor-grabbing
-          ${isDark 
-            ? 'bg-[#1a1a1d] border border-white/[0.06]' 
-            : 'bg-white border border-black/[0.04] shadow-card'
-          }
-        `}
+        className="relative flex gap-4 p-3 rounded-2xl cursor-grab active:cursor-grabbing surface-card"
       >
         {/* Image */}
-        <div className={`
-          w-20 h-20 rounded-xl overflow-hidden flex-shrink-0
-          ${isDark ? 'bg-[#0f0f11]' : 'bg-gray-50'}
-        `}>
+        <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-[var(--tg-surface-2)]">
           <img
             src={resolveAssetUrl(coverImage)}
             alt={item.product.name}
@@ -113,7 +97,7 @@ export const SwipeableCartItem: React.FC<SwipeableCartItemProps> = ({ item, onRe
             <h3 className="font-semibold text-sm text-tg-text line-clamp-1">
               {item.product.name}
             </h3>
-            <span className="text-sm font-bold text-tg-accent flex-shrink-0">
+            <span className="text-sm font-bold text-tg-text flex-shrink-0">
               {formatPrice(item.product.price)}
             </span>
           </div>
@@ -123,10 +107,7 @@ export const SwipeableCartItem: React.FC<SwipeableCartItemProps> = ({ item, onRe
           </p>
           
           <div className="flex items-center mt-auto pt-2">
-            <div className={`
-              inline-flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs
-              ${isDark ? 'bg-white/[0.06] text-white/70' : 'bg-gray-100 text-gray-600'}
-            `}>
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs surface-soft text-tg-text">
               <span>Размер: {item.product.size}</span>
               <span className="w-px h-3 bg-current opacity-20" />
               <span>×{item.quantity}</span>
@@ -135,11 +116,7 @@ export const SwipeableCartItem: React.FC<SwipeableCartItemProps> = ({ item, onRe
         </div>
 
         {/* Swipe hint */}
-        <div className={`
-          absolute right-2 top-1/2 -translate-y-1/2
-          text-xs
-          ${isDark ? 'text-white/20' : 'text-gray-300'}
-        `}>
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-tg-hint opacity-50">
           ←
         </div>
       </motion.div>

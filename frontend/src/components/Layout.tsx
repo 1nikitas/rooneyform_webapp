@@ -82,7 +82,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, containerClassName }) 
         : 'w-full max-w-[430px] mx-auto px-4 tg-safe-container';
 
     return (
-        <div className="min-h-screen min-h-[100dvh] bg-tg-bg text-tg-text antialiased">
+        <div className="min-h-screen min-h-[100dvh] tg-app-bg text-tg-text antialiased">
             <div className={contentClassName}>
                 {children}
             </div>

@@ -15,7 +15,7 @@ const Container: React.FC = () => {
         {isAdmin ? (
           <React.Suspense
             fallback={
-              <div className="min-h-screen bg-tg-bg text-tg-text flex items-center justify-center">
+              <div className="min-h-screen tg-app-bg text-tg-text flex items-center justify-center">
                 Loading...
               </div>
             }

@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, X, Info, ShoppingCart } from 'lucide-react';
-import { useTheme } from '../context/ThemeContext';
 
 type ToastType = 'success' | 'error' | 'info' | 'cart';
 
@@ -62,7 +61,6 @@ const ToastContainer: React.FC = () => {
 
 const ToastItem: React.FC<{ toast: Toast }> = ({ toast }) => {
   const { hideToast } = useToast();
-  const { isDark } = useTheme();
 
   useEffect(() => {
     if (toast.duration) {
@@ -81,18 +79,10 @@ const ToastItem: React.FC<{ toast: Toast }> = ({ toast }) => {
   };
 
   const colors = {
-    success: isDark 
-      ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' 
-      : 'bg-emerald-50 text-emerald-600 border-emerald-200',
-    error: isDark 
-      ? 'bg-red-500/20 text-red-400 border-red-500/30' 
-      : 'bg-red-50 text-red-600 border-red-200',
-    info: isDark 
-      ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' 
-      : 'bg-blue-50 text-blue-600 border-blue-200',
-    cart: isDark 
-      ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' 
-      : 'bg-blue-50 text-blue-600 border-blue-200',
+    success: 'bg-[var(--tg-surface-2)] text-tg-text border-[var(--tg-border-subtle)]',
+    error: 'bg-[var(--tg-surface-3)] text-tg-text border-[var(--tg-border-strong)]',
+    info: 'bg-[var(--tg-surface-2)] text-tg-hint border-[var(--tg-border-subtle)]',
+    cart: 'bg-[var(--tg-surface-2)] text-tg-text border-[var(--tg-border-subtle)]',
   };
 
   return (
@@ -107,7 +97,6 @@ const ToastItem: React.FC<{ toast: Toast }> = ({ toast }) => {
         rounded-xl border backdrop-blur-xl
         shadow-lg max-w-sm w-full
         ${colors[toast.type]}
-        ${isDark ? 'bg-opacity-90' : 'bg-opacity-95'}
       `}
       onClick={() => hideToast(toast.id)}
     >

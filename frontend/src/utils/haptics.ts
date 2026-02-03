@@ -14,7 +14,7 @@ export const haptics = {
   impact: (style: ImpactStyle = 'light') => {
     try {
       WebApp.HapticFeedback?.impactOccurred?.(style);
-    } catch (e) {
+    } catch {
       // Silently fail if haptics not available
     }
   },
@@ -25,7 +25,7 @@ export const haptics = {
   notification: (type: NotificationType) => {
     try {
       WebApp.HapticFeedback?.notificationOccurred?.(type);
-    } catch (e) {
+    } catch {
       // Silently fail if haptics not available
     }
   },
@@ -36,7 +36,7 @@ export const haptics = {
   selection: () => {
     try {
       WebApp.HapticFeedback?.selectionChanged?.();
-    } catch (e) {
+    } catch {
       // Silently fail if haptics not available
     }
   },

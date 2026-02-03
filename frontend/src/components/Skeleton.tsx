@@ -1,5 +1,4 @@
 import React from 'react';
-import { useTheme } from '../context/ThemeContext';
 
 interface SkeletonProps {
   className?: string;
@@ -16,10 +15,8 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   height,
   animation = 'pulse',
 }) => {
-  const { isDark } = useTheme();
-
   const baseClasses = `
-    ${isDark ? 'bg-white/[0.06]' : 'bg-black/[0.06]'}
+    bg-[var(--tg-surface-2)] opacity-70
     ${animation === 'pulse' ? 'animate-pulse' : ''}
     ${animation === 'wave' ? 'skeleton-wave' : ''}
   `;
@@ -47,16 +44,8 @@ export const Skeleton: React.FC<SkeletonProps> = ({
 
 // Product Card Skeleton
 export const ProductCardSkeleton: React.FC = () => {
-  const { isDark } = useTheme();
-
   return (
-    <div className={`
-      rounded-2xl overflow-hidden
-      ${isDark 
-        ? 'bg-[#1a1a1d] border border-white/[0.06]' 
-        : 'bg-white border border-black/[0.04]'
-      }
-    `}>
+    <div className="rounded-2xl overflow-hidden surface-card">
       {/* Image placeholder */}
       <div className="aspect-[3/4] relative">
         <Skeleton variant="rectangular" className="absolute inset-0" />
@@ -86,16 +75,8 @@ export const ProductCardSkeleton: React.FC = () => {
 
 // Cart Item Skeleton
 export const CartItemSkeleton: React.FC = () => {
-  const { isDark } = useTheme();
-
   return (
-    <div className={`
-      flex gap-4 p-3 rounded-2xl
-      ${isDark 
-        ? 'bg-[#1a1a1d] border border-white/[0.06]' 
-        : 'bg-white border border-black/[0.04]'
-      }
-    `}>
+    <div className="flex gap-4 p-3 rounded-2xl surface-card">
       {/* Image */}
       <Skeleton variant="rounded" width={80} height={80} />
       

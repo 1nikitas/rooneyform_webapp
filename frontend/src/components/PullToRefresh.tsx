@@ -1,7 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { RefreshCw } from 'lucide-react';
-import { useTheme } from '../context/ThemeContext';
 import haptics from '../utils/haptics';
 
 interface PullToRefreshProps {
@@ -18,7 +17,6 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
   onRefresh,
   disabled = false,
 }) => {
-  const { isDark } = useTheme();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isPulling, setIsPulling] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -134,8 +132,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
         <motion.div
           className={`
             w-10 h-10 rounded-full flex items-center justify-center
-            ${isDark ? 'bg-white/10 text-white/80' : 'bg-black/5 text-gray-600'}
-            shadow-lg backdrop-blur-sm
+            icon-button text-tg-text shadow-lg backdrop-blur-sm
           `}
           style={{ rotate: indicatorRotation }}
           animate={isRefreshing ? { rotate: 360 } : undefined}

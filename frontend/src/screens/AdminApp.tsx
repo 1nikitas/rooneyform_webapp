@@ -16,24 +16,24 @@ const PRODUCT_LIMIT = 500;
 const ORDER_STATUS_VARIANTS = {
   received: {
     label: 'Получен',
-    badgeClass: 'bg-gray-100 text-gray-800 border border-gray-200',
-    markerClass: 'bg-gray-400',
-    pulseClass: 'bg-gray-400/20',
-    lineClass: 'bg-gray-400/50',
+    badgeClass: 'status-badge status-received',
+    markerClass: 'status-marker-muted',
+    pulseClass: 'status-pulse',
+    lineClass: 'status-line',
   },
   paid: {
     label: 'Оплачен',
-    badgeClass: 'bg-blue-100 text-blue-800 border border-blue-200',
-    markerClass: 'bg-blue-500',
-    pulseClass: 'bg-blue-400/20',
-    lineClass: 'bg-blue-400/50',
+    badgeClass: 'status-badge status-paid',
+    markerClass: 'status-marker',
+    pulseClass: 'status-pulse',
+    lineClass: 'status-line',
   },
   completed: {
     label: 'Завершен',
-    badgeClass: 'bg-emerald-100 text-emerald-800 border border-emerald-200',
-    markerClass: 'bg-emerald-500',
-    pulseClass: 'bg-emerald-400/20',
-    lineClass: 'bg-emerald-400/50',
+    badgeClass: 'status-badge status-completed',
+    markerClass: 'status-marker',
+    pulseClass: 'status-pulse',
+    lineClass: 'status-line',
   },
 } as const;
 
@@ -517,14 +517,14 @@ export default function AdminApp() {
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              className={`px-4 py-2 rounded-full text-sm font-semibold ${adminTab === 'products' ? 'bg-blue-600 text-white' : 'bg-white/10 text-gray-500'}`}
+              className={`px-4 py-2 rounded-full text-sm font-semibold transition ${adminTab === 'products' ? 'badge-contrast' : 'surface-muted text-tg-hint'}`}
               onClick={() => setAdminTab('products')}
             >
               Товары
             </button>
             <button
               type="button"
-              className={`px-4 py-2 rounded-full text-sm font-semibold ${adminTab === 'orders' ? 'bg-blue-600 text-white' : 'bg-white/10 text-gray-500'}`}
+              className={`px-4 py-2 rounded-full text-sm font-semibold transition ${adminTab === 'orders' ? 'badge-contrast' : 'surface-muted text-tg-hint'}`}
               onClick={() => setAdminTab('orders')}
             >
               Заказы
@@ -537,14 +537,14 @@ export default function AdminApp() {
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                className={`px-4 py-2 rounded-full text-sm font-semibold ${productTab === 'jerseys' ? 'bg-blue-600 text-white' : 'bg-white/10 text-gray-500'}`}
+                className={`px-4 py-2 rounded-full text-sm font-semibold transition ${productTab === 'jerseys' ? 'badge-contrast' : 'surface-muted text-tg-hint'}`}
                 onClick={() => setProductTab('jerseys')}
               >
                 Футболки
               </button>
               <button
                 type="button"
-                className={`px-4 py-2 rounded-full text-sm font-semibold ${productTab === 'posters' ? 'bg-blue-600 text-white' : 'bg-white/10 text-gray-500'}`}
+                className={`px-4 py-2 rounded-full text-sm font-semibold transition ${productTab === 'posters' ? 'badge-contrast' : 'surface-muted text-tg-hint'}`}
                 onClick={() => setProductTab('posters')}
               >
                 Плакаты
@@ -555,18 +555,18 @@ export default function AdminApp() {
                 Добавить {productTab === 'posters' ? 'плакат' : 'футболку'}
               </h2>
               <form className="space-y-3" onSubmit={handleSubmit}>
-                <input className="w-full rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400" name="name" placeholder="Название" value={form.name} onChange={handleChange} required />
-                <textarea className="w-full rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400" name="description" placeholder="Описание" value={form.description} onChange={handleChange} />
+                <input className="tg-input" name="name" placeholder="Название" value={form.name} onChange={handleChange} required />
+                <textarea className="tg-input" name="description" placeholder="Описание" value={form.description} onChange={handleChange} />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <input className="rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400" name="price" placeholder="Цена (₽)" value={form.price} onChange={handleChange} required type="number" min="0" />
+                  <input className="tg-input" name="price" placeholder="Цена (₽)" value={form.price} onChange={handleChange} required type="number" min="0" />
                   {!isPosterTab && (
-                    <input className="rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400" name="team" placeholder="Команда" value={form.team} onChange={handleChange} />
+                    <input className="tg-input" name="team" placeholder="Команда" value={form.team} onChange={handleChange} />
                   )}
                 </div>
                 {!isPosterTab && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <input className="rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400" name="size" placeholder="Размер" value={form.size} onChange={handleChange} />
-                    <input className="rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400" name="category_slug" placeholder="Лига (slug)" value={form.category_slug} onChange={handleChange} />
+                    <input className="tg-input" name="size" placeholder="Размер" value={form.size} onChange={handleChange} />
+                    <input className="tg-input" name="category_slug" placeholder="Лига (slug)" value={form.category_slug} onChange={handleChange} />
                   </div>
                 )}
                 {isPosterTab && (
@@ -574,22 +574,22 @@ export default function AdminApp() {
                 )}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs uppercase tracking-[0.2em] text-gray-500">Фотографии</span>
+                    <span className="text-xs uppercase tracking-[0.2em] text-tg-hint">Фотографии</span>
                     {uploads.length > 0 && (
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-tg-hint opacity-70">
                         {uploads.length} шт.
                       </span>
                     )}
                   </div>
-                  <div className="rounded-2xl border border-dashed border-gray-300 bg-white/70 p-4">
+                  <div className="rounded-2xl border border-dashed border-[var(--tg-border-subtle)] bg-[var(--tg-surface-2)] p-4">
                     <input
                       type="file"
                       accept="image/*"
                       multiple
                       onChange={handleFilesSelected}
-                      className="w-full text-sm text-gray-600 file:mr-4 file:rounded-full file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-blue-500"
+                      className="w-full text-sm text-tg-hint file:mr-4 file:rounded-full file:border-0 file:bg-[var(--tg-theme-text-color)] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-[var(--tg-theme-bg-color)] hover:file:opacity-90"
                     />
-                    <p className="mt-2 text-xs text-gray-400">
+                    <p className="mt-2 text-xs text-tg-hint opacity-70">
                       Можно выбрать несколько фото, первое будет обложкой товара.
                     </p>
                   </div>
@@ -598,18 +598,18 @@ export default function AdminApp() {
                       {uploads.map((item, index) => (
                         <div
                           key={`${item.file.name}-${index}`}
-                          className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
+                          className="relative overflow-hidden rounded-2xl surface-card"
                         >
                           <img src={item.preview} alt={`preview-${index}`} className="h-24 w-full object-cover" />
                           {index === 0 && (
-                            <span className="absolute left-2 top-2 rounded-full bg-blue-600 px-2 py-0.5 text-[10px] font-semibold text-white">
+                            <span className="absolute left-2 top-2 rounded-full badge-contrast px-2 py-0.5 text-[10px] font-semibold">
                               Обложка
                             </span>
                           )}
                           <button
                             type="button"
                             onClick={() => removeUpload(index)}
-                            className="absolute right-2 top-2 rounded-full bg-black/60 p-1 text-white hover:bg-black/80"
+                            className="absolute right-2 top-2 rounded-full bg-[rgba(var(--tg-ink-rgb),0.55)] p-1 text-[var(--tg-theme-bg-color)] hover:bg-[rgba(var(--tg-ink-rgb),0.7)]"
                             aria-label="Удалить фото"
                           >
                             <X size={12} />
@@ -621,7 +621,7 @@ export default function AdminApp() {
                 </div>
                 <button
                   type="submit"
-                  className={`w-full py-3 rounded-2xl bg-blue-600 text-white font-semibold ${
+                  className={`w-full py-3 rounded-2xl btn-primary font-semibold ${
                     isSubmitting ? 'opacity-70 cursor-wait' : ''
                   }`}
                   disabled={isSubmitting}
@@ -648,22 +648,22 @@ export default function AdminApp() {
                         openEditModal(product);
                       }
                     }}
-                    className="glass-card rounded-3xl p-4 flex flex-col gap-4 sm:flex-row sm:items-center cursor-pointer transition hover:-translate-y-0.5 hover:border-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                    className="glass-card rounded-3xl p-4 flex flex-col gap-4 sm:flex-row sm:items-center cursor-pointer transition hover:-translate-y-0.5 hover:border-[var(--tg-border-strong)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tg-theme-text-color)]"
                   >
                     <img src={resolveImageSrc(product.gallery?.[0] || product.image_url)} alt={product.name} className="w-20 h-20 rounded-2xl object-cover" />
                     <div className="flex-1">
-                      <p className="text-xs text-gray-500 uppercase">{product.category?.name}</p>
+                      <p className="text-xs text-tg-hint uppercase">{product.category?.name}</p>
                       <h3 className="font-semibold">{product.name}</h3>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-tg-hint">
                         {[product.team, product.size].filter(Boolean).join(' • ') || 'Без характеристик'}
                       </p>
-                      <p className="text-xs text-blue-500 mt-1">Нажмите для редактирования</p>
+                      <p className="text-xs text-tg-hint mt-1">Нажмите для редактирования</p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                      <span className="text-sm font-semibold">{product.price} ₽</span>
+                      <span className="text-sm font-semibold text-tg-text">{product.price} ₽</span>
                       <button
                         type="button"
-                        className="text-xs text-red-500"
+                        className="text-xs text-tg-hint hover:text-tg-text transition-colors"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDelete(product.id);
@@ -675,7 +675,7 @@ export default function AdminApp() {
                   </div>
                 ))}
                 {filteredProducts.length === 0 && (
-                  <div className="glass-card rounded-2xl px-6 py-10 text-center text-gray-500">
+                  <div className="glass-card rounded-2xl px-6 py-10 text-center text-tg-hint">
                     Пока нет товаров в этой вкладке.
                   </div>
                 )}
@@ -692,12 +692,12 @@ export default function AdminApp() {
           <div className="glass-card rounded-3xl p-4 space-y-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <span className="text-xs text-gray-500 uppercase tracking-widest">Быстрый диапазон</span>
-                <p className="text-sm font-semibold text-gray-700 dark:text-gray-100">до {formatRangeDate(rangeEnd)}</p>
+                <span className="text-xs text-tg-hint uppercase tracking-widest">Быстрый диапазон</span>
+                <p className="text-sm font-semibold text-tg-text">до {formatRangeDate(rangeEnd)}</p>
               </div>
               <div className="text-right">
-                <span className="text-xs text-gray-500 uppercase tracking-widest">Длительность</span>
-                <p className="text-sm font-semibold text-gray-700 dark:text-gray-100">{daysRange} дн.</p>
+                <span className="text-xs text-tg-hint uppercase tracking-widest">Длительность</span>
+                <p className="text-sm font-semibold text-tg-text">{daysRange} дн.</p>
               </div>
             </div>
             <input
@@ -708,10 +708,10 @@ export default function AdminApp() {
               onChange={handleRangeChange}
               className="time-slider w-full"
               style={{
-                background: `linear-gradient(90deg, #2563eb ${sliderPercent}%, rgba(255,255,255,0.2) ${sliderPercent}%)`,
+                background: `linear-gradient(90deg, var(--tg-theme-text-color) ${sliderPercent}%, rgba(var(--tg-ink-rgb),0.2) ${sliderPercent}%)`,
               }}
             />
-            <div className="flex justify-between text-xs text-gray-500">
+            <div className="flex justify-between text-xs text-tg-hint">
               <span>1 день</span>
               <span>{MAX_SLIDER_DAYS} дн.</span>
             </div>
@@ -719,33 +719,33 @@ export default function AdminApp() {
 
           <div className="glass-card rounded-3xl p-4 space-y-4">
             <div>
-              <span className="text-xs text-gray-500 uppercase tracking-widest">Выбранный период</span>
-              <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">{selectedRangeLabel} · {selectedDays} дн.</p>
+              <span className="text-xs text-tg-hint uppercase tracking-widest">Выбранный период</span>
+              <p className="text-sm font-semibold text-tg-text">{selectedRangeLabel} · {selectedDays} дн.</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <label className="text-xs font-semibold text-gray-500 space-y-1">
+              <label className="text-xs font-semibold text-tg-hint space-y-1">
                 <span className="uppercase tracking-wide text-[11px]">С даты</span>
                 <input
                   type="date"
                   value={dateInputs.start}
                   onChange={handleDateFieldChange('start')}
-                  className="w-full rounded-2xl border border-gray-200 bg-white/70 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-blue-500"
+                  className="tg-input py-2 text-sm"
                 />
               </label>
-              <label className="text-xs font-semibold text-gray-500 space-y-1">
+              <label className="text-xs font-semibold text-tg-hint space-y-1">
                 <span className="uppercase tracking-wide text-[11px]">По дату</span>
                 <input
                   type="date"
                   value={dateInputs.end}
                   onChange={handleDateFieldChange('end')}
-                  className="w-full rounded-2xl border border-gray-200 bg-white/70 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-blue-500"
+                  className="tg-input py-2 text-sm"
                 />
               </label>
             </div>
             <button
               type="button"
               onClick={handleApplyDateFilter}
-              className="w-full rounded-2xl bg-blue-600 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 active:scale-[0.99]"
+              className="w-full rounded-2xl btn-primary text-sm font-semibold active:scale-[0.99]"
             >
               Применить даты
             </button>
@@ -753,11 +753,11 @@ export default function AdminApp() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="glass-card rounded-2xl p-4">
-              <p className="text-xs text-gray-500">Заказы</p>
+              <p className="text-xs text-tg-hint">Заказы</p>
               <p className="text-2xl font-bold">{orders.length}</p>
             </div>
             <div className="glass-card rounded-2xl p-4">
-              <p className="text-xs text-gray-500">Выручка</p>
+              <p className="text-xs text-tg-hint">Выручка</p>
               <p className="text-2xl font-bold inline-flex items-baseline gap-1">
                 <SlidingNumber number={revenueTotal} thousandSeparator=" " decimalPlaces={0} />
                 <span className="text-xs font-semibold">₽</span>
@@ -766,19 +766,19 @@ export default function AdminApp() {
           </div>
 
           <div className="glass-card rounded-3xl p-4 space-y-4 hidden lg:block">
-            <div className="flex justify-between text-xs text-gray-500 uppercase tracking-widest">
+            <div className="flex justify-between text-xs text-tg-hint uppercase tracking-widest">
               <span>{formatRangeDate(rangeStart)}</span>
               <span>{formatRangeDate(rangeEnd)}</span>
             </div>
             <div className="relative h-40">
-              <div className="absolute left-8 right-8 top-1/2 h-1 bg-gradient-to-r from-blue-500/40 via-blue-400/40 to-blue-500/40" />
-              <div className="absolute left-8 right-8 top-1/2 flex justify-between text-[10px] text-gray-500 -translate-y-2 uppercase tracking-widest">
+              <div className="absolute left-8 right-8 top-1/2 h-1 bg-gradient-to-r from-[rgba(var(--tg-ink-rgb),0.18)] via-[rgba(var(--tg-ink-rgb),0.4)] to-[rgba(var(--tg-ink-rgb),0.18)]" />
+              <div className="absolute left-8 right-8 top-1/2 flex justify-between text-[10px] text-tg-hint -translate-y-2 uppercase tracking-widest">
                 {timelineLabels.map((label, idx) => (
                   <span key={`${label}-${idx}`}>{label}</span>
                 ))}
               </div>
               {timelineOrders.length === 0 ? (
-                <div className="absolute inset-0 flex items-center justify-center text-sm text-gray-500">
+                <div className="absolute inset-0 flex items-center justify-center text-sm text-tg-hint">
                   Заказы за выбранный период не найдены
                 </div>
               ) : (
@@ -791,7 +791,7 @@ export default function AdminApp() {
                       style={{ left: `calc(${position}% - 64px)` }}
                     >
                       {alignTop && (
-                        <div className="mb-3 w-full rounded-2xl bg-white/95 px-3 py-2 text-[11px] text-gray-900 shadow-md">
+                        <div className="mb-3 w-full rounded-2xl surface-card px-3 py-2 text-[11px] text-tg-text shadow-md">
                           <div className="flex items-center justify-between gap-1">
                             <p className="font-semibold">#{order.id}</p>
                             <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${variant.badgeClass}`}>
@@ -799,11 +799,11 @@ export default function AdminApp() {
                             </span>
                           </div>
                           <p className="text-sm font-semibold">{formatPrice(order.total_price)}</p>
-                          <p className="text-[10px] text-gray-500">{formatOrderMoment(order.created_at)}</p>
+                          <p className="text-[10px] text-tg-hint">{formatOrderMoment(order.created_at)}</p>
                         </div>
                       )}
                       <div className="flex flex-col items-center gap-1">
-                        <span className="text-[10px] text-gray-500">
+                        <span className="text-[10px] text-tg-hint">
                           {new Date(order.created_at).toLocaleTimeString('ru-RU', {
                             hour: '2-digit',
                             minute: '2-digit',
@@ -812,11 +812,11 @@ export default function AdminApp() {
                         <div className="relative flex flex-col items-center">
                           <span className={`absolute -left-3 -top-3 h-10 w-10 rounded-full ${variant.pulseClass} animate-ping`} />
                           <div className={`h-5 w-px -translate-y-4 ${variant.lineClass}`} />
-                          <div className={`relative z-10 h-4 w-4 rounded-full border-2 border-white ${variant.markerClass} shadow`} />
+                          <div className={`relative z-10 h-4 w-4 rounded-full border-2 border-[var(--tg-theme-bg-color)] ${variant.markerClass} shadow`} />
                         </div>
                       </div>
                       {!alignTop && (
-                        <div className="mt-3 w-full rounded-2xl bg-white/95 px-3 py-2 text-[11px] text-gray-900 shadow-md">
+                        <div className="mt-3 w-full rounded-2xl surface-card px-3 py-2 text-[11px] text-tg-text shadow-md">
                           <div className="flex items-center justify-between gap-1">
                             <p className="font-semibold">#{order.id}</p>
                             <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${variant.badgeClass}`}>
@@ -824,7 +824,7 @@ export default function AdminApp() {
                             </span>
                           </div>
                           <p className="text-sm font-semibold">{formatPrice(order.total_price)}</p>
-                          <p className="text-[10px] text-gray-500">{formatOrderMoment(order.created_at)}</p>
+                          <p className="text-[10px] text-tg-hint">{formatOrderMoment(order.created_at)}</p>
                         </div>
                       )}
                     </div>
@@ -849,26 +849,26 @@ export default function AdminApp() {
                       setSelectedOrder(order);
                     }
                   }}
-                  className="glass-card rounded-3xl p-4 space-y-3 cursor-pointer transition hover:-translate-y-0.5 hover:border-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                  className="glass-card rounded-3xl p-4 space-y-3 cursor-pointer transition hover:-translate-y-0.5 hover:border-[var(--tg-border-strong)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tg-theme-text-color)]"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
-                      <p className="text-xs text-gray-500">{new Date(order.created_at).toLocaleString('ru-RU')}</p>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Заказ #{order.id}</h3>
+                      <p className="text-xs text-tg-hint">{new Date(order.created_at).toLocaleString('ru-RU')}</p>
+                      <h3 className="text-lg font-semibold text-tg-text">Заказ #{order.id}</h3>
                     </div>
                     <div className="flex flex-col items-end gap-2 text-right">
-                      <span className="text-lg font-bold text-gray-900 dark:text-white">{formatPrice(order.total_price)}</span>
+                      <span className="text-lg font-bold text-tg-text">{formatPrice(order.total_price)}</span>
                       <span className={`text-xs font-semibold px-3 py-1 rounded-full ${variant.badgeClass}`}>
                         {variant.label}
                       </span>
-                      <label className="text-[11px] uppercase tracking-wide text-gray-400">
+                      <label className="text-[11px] uppercase tracking-wide text-tg-hint">
                         Сменить статус
                         <select
                           value={order.status}
                           onChange={(e) => handleStatusChange(order.id, e.target.value as Order['status'])}
                           onClick={(e) => e.stopPropagation()}
                           onFocus={(e) => e.stopPropagation()}
-                          className="mt-1 w-36 rounded-2xl border border-gray-200 bg-white/90 px-3 py-1 text-xs font-semibold text-gray-700 focus:outline-none focus:border-blue-500"
+                          className="mt-1 w-36 tg-input py-1 text-xs font-semibold"
                         >
                           {ORDER_STATUS_LIST.map((status) => (
                             <option key={status} value={status}>
@@ -879,7 +879,7 @@ export default function AdminApp() {
                       </label>
                     </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-tg-hint">
                     {order.items.map((item) => item.product_name).join(', ')}
                   </div>
                 </div>
@@ -904,30 +904,30 @@ export default function AdminApp() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               transition={{ duration: 0.2 }}
-              className="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl max-h-[85vh] overflow-y-auto"
+              className="w-full max-w-2xl rounded-3xl surface-card p-6 shadow-2xl max-h-[85vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="space-y-5">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-xs text-gray-400 uppercase tracking-widest">Редактирование</p>
-                    <h3 className="text-xl font-semibold text-gray-900">Карточка товара</h3>
-                    <p className="text-sm text-gray-500">ID #{editingProduct.id}</p>
+                    <p className="text-xs text-tg-hint uppercase tracking-widest">Редактирование</p>
+                    <h3 className="text-xl font-semibold text-tg-text">Карточка товара</h3>
+                    <p className="text-sm text-tg-hint">ID #{editingProduct.id}</p>
                   </div>
                   <button
                     type="button"
                     onClick={closeEditModal}
-                    className="rounded-full border border-gray-200 p-2 text-gray-500 hover:text-gray-900"
+                    className="rounded-full icon-button p-2 hover:opacity-80"
                   >
                     <X size={16} />
                   </button>
                 </div>
 
                 <div className="space-y-3">
-                  <label className="text-xs font-semibold text-gray-500 space-y-1">
+                  <label className="text-xs font-semibold text-tg-hint space-y-1">
                     <span className="uppercase tracking-wide text-[11px]">Название</span>
                     <input
-                      className="w-full rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400"
+                      className="tg-input"
                       name="name"
                       placeholder="Название товара"
                       value={editForm.name}
@@ -935,10 +935,10 @@ export default function AdminApp() {
                       required
                     />
                   </label>
-                  <label className="text-xs font-semibold text-gray-500 space-y-1">
+                  <label className="text-xs font-semibold text-tg-hint space-y-1">
                     <span className="uppercase tracking-wide text-[11px]">Описание</span>
                     <textarea
-                      className="w-full rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400"
+                      className="tg-input"
                       name="description"
                       placeholder="Описание товара"
                       value={editForm.description}
@@ -947,10 +947,10 @@ export default function AdminApp() {
                     />
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <label className="text-xs font-semibold text-gray-500 space-y-1">
+                    <label className="text-xs font-semibold text-tg-hint space-y-1">
                       <span className="uppercase tracking-wide text-[11px]">Цена</span>
                       <input
-                        className="w-full rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400"
+                        className="tg-input"
                         name="price"
                         placeholder="Цена (₽)"
                         value={editForm.price}
@@ -961,10 +961,10 @@ export default function AdminApp() {
                       />
                     </label>
                     {!isPosterEdit && (
-                      <label className="text-xs font-semibold text-gray-500 space-y-1">
+                      <label className="text-xs font-semibold text-tg-hint space-y-1">
                         <span className="uppercase tracking-wide text-[11px]">Команда</span>
                         <input
-                          className="w-full rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400"
+                          className="tg-input"
                           name="team"
                           placeholder="Команда"
                           value={editForm.team}
@@ -975,20 +975,20 @@ export default function AdminApp() {
                   </div>
                   {!isPosterEdit && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <label className="text-xs font-semibold text-gray-500 space-y-1">
+                      <label className="text-xs font-semibold text-tg-hint space-y-1">
                         <span className="uppercase tracking-wide text-[11px]">Размер</span>
                         <input
-                          className="w-full rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400"
+                          className="tg-input"
                           name="size"
                           placeholder="Размер"
                           value={editForm.size}
                           onChange={handleEditChange}
                         />
                       </label>
-                      <label className="text-xs font-semibold text-gray-500 space-y-1">
+                      <label className="text-xs font-semibold text-tg-hint space-y-1">
                         <span className="uppercase tracking-wide text-[11px]">Лига (slug)</span>
                         <input
-                          className="w-full rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder-gray-400"
+                          className="tg-input"
                           name="category_slug"
                           placeholder="premier-league"
                           value={editForm.category_slug}
@@ -1004,20 +1004,20 @@ export default function AdminApp() {
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs uppercase tracking-[0.2em] text-gray-500">Фотографии</span>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs uppercase tracking-[0.2em] text-tg-hint">Фотографии</span>
+                    <span className="text-xs text-tg-hint opacity-70">
                       {editExistingImages.length + editNewImages.length} шт.
                     </span>
                   </div>
-                  <div className="rounded-2xl border border-dashed border-gray-300 bg-white/70 p-4">
+                  <div className="rounded-2xl border border-dashed border-[var(--tg-border-subtle)] bg-[var(--tg-surface-2)] p-4">
                     <input
                       type="file"
                       accept="image/*"
                       multiple
                       onChange={handleEditFilesSelected}
-                      className="w-full text-sm text-gray-600 file:mr-4 file:rounded-full file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-blue-500"
+                      className="w-full text-sm text-tg-hint file:mr-4 file:rounded-full file:border-0 file:bg-[var(--tg-theme-text-color)] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-[var(--tg-theme-bg-color)] hover:file:opacity-90"
                     />
-                    <p className="mt-2 text-xs text-gray-400">
+                    <p className="mt-2 text-xs text-tg-hint opacity-70">
                       Нажмите на фото, чтобы сделать его обложкой.
                     </p>
                   </div>
@@ -1031,11 +1031,11 @@ export default function AdminApp() {
                             key={`existing-${index}`}
                             type="button"
                             onClick={() => setEditCover({ kind: 'existing', index })}
-                            className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm text-left"
+                            className="relative overflow-hidden rounded-2xl surface-card text-left"
                           >
                             <img src={resolveImageSrc(src)} alt={`existing-${index}`} className="h-24 w-full object-cover" />
                             {isCover && (
-                              <span className="absolute left-2 top-2 rounded-full bg-blue-600 px-2 py-0.5 text-[10px] font-semibold text-white">
+                              <span className="absolute left-2 top-2 rounded-full badge-contrast px-2 py-0.5 text-[10px] font-semibold">
                                 Обложка
                               </span>
                             )}
@@ -1045,7 +1045,7 @@ export default function AdminApp() {
                                 e.stopPropagation();
                                 removeEditExisting(index);
                               }}
-                              className="absolute right-2 top-2 rounded-full bg-black/60 p-1 text-white hover:bg-black/80"
+                              className="absolute right-2 top-2 rounded-full bg-[rgba(var(--tg-ink-rgb),0.55)] p-1 text-[var(--tg-theme-bg-color)] hover:bg-[rgba(var(--tg-ink-rgb),0.7)]"
                               aria-label="Удалить фото"
                             >
                               <X size={12} />
@@ -1060,11 +1060,11 @@ export default function AdminApp() {
                             key={`new-${index}`}
                             type="button"
                             onClick={() => setEditCover({ kind: 'new', index })}
-                            className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm text-left"
+                            className="relative overflow-hidden rounded-2xl surface-card text-left"
                           >
                             <img src={item.preview} alt={`new-${index}`} className="h-24 w-full object-cover" />
                             {isCover && (
-                              <span className="absolute left-2 top-2 rounded-full bg-blue-600 px-2 py-0.5 text-[10px] font-semibold text-white">
+                              <span className="absolute left-2 top-2 rounded-full badge-contrast px-2 py-0.5 text-[10px] font-semibold">
                                 Обложка
                               </span>
                             )}
@@ -1074,7 +1074,7 @@ export default function AdminApp() {
                                 e.stopPropagation();
                                 removeEditNew(index);
                               }}
-                              className="absolute right-2 top-2 rounded-full bg-black/60 p-1 text-white hover:bg-black/80"
+                              className="absolute right-2 top-2 rounded-full bg-[rgba(var(--tg-ink-rgb),0.55)] p-1 text-[var(--tg-theme-bg-color)] hover:bg-[rgba(var(--tg-ink-rgb),0.7)]"
                               aria-label="Удалить фото"
                             >
                               <X size={12} />
@@ -1090,7 +1090,7 @@ export default function AdminApp() {
                   <button
                     type="button"
                     onClick={handleEditSubmit}
-                    className={`flex-1 rounded-2xl bg-blue-600 py-3 text-sm font-semibold text-white ${isEditSaving ? 'opacity-70 cursor-wait' : ''}`}
+                    className={`flex-1 rounded-2xl btn-primary text-sm font-semibold ${isEditSaving ? 'opacity-70 cursor-wait' : ''}`}
                     disabled={isEditSaving}
                   >
                     {isEditSaving ? 'Сохраняем...' : 'Сохранить изменения'}
@@ -1098,7 +1098,7 @@ export default function AdminApp() {
                   <button
                     type="button"
                     onClick={closeEditModal}
-                    className="flex-1 rounded-2xl border border-gray-200 py-3 text-sm font-semibold text-gray-600"
+                    className="flex-1 rounded-2xl btn-secondary text-sm font-semibold"
                   >
                     Отмена
                   </button>
@@ -1123,7 +1123,7 @@ export default function AdminApp() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               transition={{ duration: 0.2 }}
-              className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl"
+              className="w-full max-w-lg rounded-3xl surface-card p-6 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               {(() => {
@@ -1132,27 +1132,27 @@ export default function AdminApp() {
                   <div className="space-y-4">
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <p className="text-xs text-gray-400">Заказ #{selectedOrder.id}</p>
-                        <h3 className="text-xl font-semibold text-gray-900">Детали заказа</h3>
-                        <p className="text-sm text-gray-500">{formatOrderMoment(selectedOrder.created_at)}</p>
+                        <p className="text-xs text-tg-hint">Заказ #{selectedOrder.id}</p>
+                        <h3 className="text-xl font-semibold text-tg-text">Детали заказа</h3>
+                        <p className="text-sm text-tg-hint">{formatOrderMoment(selectedOrder.created_at)}</p>
                       </div>
                       <button
                         type="button"
                         onClick={() => setSelectedOrder(null)}
-                        className="rounded-full border border-gray-200 p-2 text-gray-500 hover:text-gray-900"
+                        className="rounded-full icon-button p-2 hover:opacity-80"
                       >
                         <X size={16} />
                       </button>
                     </div>
-                    <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3">
-                      <span className="text-sm text-gray-500">Статус</span>
+                    <div className="flex items-center justify-between rounded-2xl surface-soft px-4 py-3">
+                      <span className="text-sm text-tg-hint">Статус</span>
                       <span className={`text-xs font-semibold px-3 py-1 rounded-full ${variant.badgeClass}`}>
                         {variant.label}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3">
-                      <span className="text-sm text-gray-500">Сумма</span>
-                      <span className="text-lg font-semibold text-gray-900">{formatPrice(selectedOrder.total_price)}</span>
+                    <div className="flex items-center justify-between rounded-2xl surface-soft px-4 py-3">
+                      <span className="text-sm text-tg-hint">Сумма</span>
+                      <span className="text-lg font-semibold text-tg-text">{formatPrice(selectedOrder.total_price)}</span>
                     </div>
                     <div className="space-y-2 max-h-[45vh] overflow-y-auto pr-1">
                       {selectedOrder.items.map((item) => {
@@ -1162,17 +1162,17 @@ export default function AdminApp() {
                         return (
                           <div
                             key={item.id}
-                            className="flex gap-3 rounded-2xl border border-gray-100 bg-white/80 p-3 shadow-sm"
+                            className="flex gap-3 rounded-2xl surface-card p-3 shadow-sm"
                           >
-                            <div className="h-20 w-20 rounded-2xl overflow-hidden bg-gray-100">
+                            <div className="h-20 w-20 rounded-2xl overflow-hidden bg-[var(--tg-surface-2)]">
                               <img src={imageSrc} alt={item.product_name} className="h-full w-full object-cover" />
                             </div>
                             <div className="flex-1">
-                              <p className="text-sm font-semibold text-gray-900">{item.product_name}</p>
-                              <p className="text-xs text-gray-500">{product?.team || 'Команда не указана'}</p>
-                              <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
+                              <p className="text-sm font-semibold text-tg-text">{item.product_name}</p>
+                              <p className="text-xs text-tg-hint">{product?.team || 'Команда не указана'}</p>
+                              <div className="mt-2 flex items-center justify-between text-xs text-tg-hint">
                                 <span>Кол-во: {item.quantity}</span>
-                                <span className="font-semibold text-gray-900">
+                                <span className="font-semibold text-tg-text">
                                   {formatPrice(item.price * item.quantity)}
                                 </span>
                               </div>

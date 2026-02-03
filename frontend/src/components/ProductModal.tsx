@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Product } from '../types';
-import { X, Heart, ShoppingCart, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Heart, ShoppingCart } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation } from 'swiper/modules';
 import type { Swiper as SwiperType } from 'swiper/types';
 import 'swiper/css';
-import 'swiper/css/navigation';
-import { useTheme } from '../context/ThemeContext';
+import WebApp from '@twa-dev/sdk';
 import { formatPrice } from '../utils/currency';
 import { resolveAssetUrl } from '../utils/assets';
 import { useToast } from './Toast';
@@ -24,12 +22,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
     const [activeIndex, setActiveIndex] = useState(0);
     const [swiperRef, setSwiperRef] = useState<SwiperType | null>(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
-    const { isDark } = useTheme();
     const { showToast } = useToast();
-
-    useEffect(() => {
-        setActiveIndex(0);
-    }, [product?.id]);
 
     // Lock body scroll when modal is open
     useEffect(() => {
@@ -40,6 +33,32 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
             };
         }
     }, [product]);
+
+    // Telegram back button handling
+    useEffect(() => {
+        if (!product) return;
+        const handleBack = () => {
+            if (isFullscreen) {
+                setIsFullscreen(false);
+            } else {
+                onClose();
+            }
+        };
+        try {
+            WebApp.BackButton.show();
+            WebApp.BackButton.onClick(handleBack);
+        } catch {
+            // Ignore if not in Telegram
+        }
+        return () => {
+            try {
+                WebApp.BackButton.offClick(handleBack);
+                WebApp.BackButton.hide();
+            } catch {
+                // Ignore
+            }
+        };
+    }, [product, isFullscreen, onClose]);
 
     if (!product) return null;
 
@@ -74,22 +93,18 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                             max-h-[92vh] overflow-hidden
                             rounded-t-3xl
                             flex flex-col
-                            ${isDark ? 'bg-[#0f0f11]' : 'bg-white'}
+                            bg-[var(--tg-surface-1)] border-t border-[var(--tg-border-subtle)]
                         `}
                     >
                         {/* Close button */}
                         <button
                             onClick={onClose}
                             className={`
-                                absolute top-4 right-4 z-30
+                                absolute top-4 left-4 z-30
                                 w-10 h-10 rounded-xl
                                 flex items-center justify-center
                                 tap-target
-                                ${isDark 
-                                    ? 'bg-white/10 text-white/80 hover:bg-white/15' 
-                                    : 'bg-black/5 text-gray-600 hover:bg-black/10'
-                                }
-                                transition-colors
+                                icon-button backdrop-blur-md transition-colors
                             `}
                             aria-label="Закрыть"
                         >
@@ -97,12 +112,8 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                         </button>
 
                         {/* Image Gallery */}
-                        <div className={`
-                            relative aspect-square flex-shrink-0
-                            ${isDark ? 'bg-[#18181b]' : 'bg-gray-50'}
-                        `}>
+                        <div className="relative aspect-[4/5] flex-shrink-0 bg-[var(--tg-surface-2)]">
                             <Swiper
-                                modules={[Navigation]}
                                 onSwiper={setSwiperRef}
                                 onSlideChange={(swiper) => setActiveIndex(swiper.activeIndex)}
                                 className="h-full"
@@ -129,52 +140,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                                 ))}
                             </Swiper>
 
-                            {/* Navigation arrows */}
-                            {hasMultipleImages && (
-                                <>
-                                    <button
-                                        onClick={() => {
-                                            haptics.tap();
-                                            swiperRef?.slidePrev();
-                                        }}
-                                        className={`
-                                            absolute left-3 top-1/2 -translate-y-1/2 z-20
-                                            w-10 h-10 rounded-xl
-                                            flex items-center justify-center
-                                            transition-all tap-target
-                                            ${activeIndex === 0 ? 'opacity-0 pointer-events-none' : 'opacity-100'}
-                                            ${isDark 
-                                                ? 'bg-white/10 text-white hover:bg-white/20' 
-                                                : 'bg-white/90 text-gray-700 shadow-md hover:bg-white'
-                                            }
-                                        `}
-                                        aria-label="Предыдущее фото"
-                                    >
-                                        <ChevronLeft size={20} />
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            haptics.tap();
-                                            swiperRef?.slideNext();
-                                        }}
-                                        className={`
-                                            absolute right-3 top-1/2 -translate-y-1/2 z-20
-                                            w-10 h-10 rounded-xl
-                                            flex items-center justify-center
-                                            transition-all tap-target
-                                            ${activeIndex === images.length - 1 ? 'opacity-0 pointer-events-none' : 'opacity-100'}
-                                            ${isDark 
-                                                ? 'bg-white/10 text-white hover:bg-white/20' 
-                                                : 'bg-white/90 text-gray-700 shadow-md hover:bg-white'
-                                            }
-                                        `}
-                                        aria-label="Следующее фото"
-                                    >
-                                        <ChevronRight size={20} />
-                                    </button>
-                                </>
-                            )}
-
                             {/* Pagination dots */}
                             {hasMultipleImages && (
                                 <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5 z-20">
@@ -185,8 +150,8 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                                             className={`
                                                 h-1.5 rounded-full transition-all duration-200
                                                 ${activeIndex === idx 
-                                                    ? 'w-6 bg-tg-accent' 
-                                                    : `w-1.5 ${isDark ? 'bg-white/30' : 'bg-black/20'}`
+                                                    ? 'w-6 bg-white/80' 
+                                                    : 'w-1.5 bg-white/30'
                                                 }
                                             `}
                                             aria-label={`Фото ${idx + 1}`}
@@ -201,37 +166,31 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                             {/* Title & Price */}
                             <div className="flex justify-between items-start gap-4 mb-4">
                                 <div className="flex-1 min-w-0">
-                                    <h2 className="text-xl font-bold text-tg-text leading-tight">
-                                        {product.name}
-                                    </h2>
-                                    {product.team && (
-                                        <p className="text-sm text-tg-hint mt-1">
-                                            {product.team}
-                                        </p>
-                                    )}
-                                </div>
-                                <span className="text-xl font-bold text-tg-accent flex-shrink-0">
-                                    {formatPrice(product.price)}
-                                </span>
-                            </div>
-
-                            {/* Tags */}
-                            <div className="flex flex-wrap gap-2 mb-5">
-                                {product.size && (
-                                    <span className={`
-                                        px-3 py-1.5 rounded-lg text-sm font-medium
-                                        ${isDark ? 'bg-white/[0.06] text-white/80' : 'bg-gray-100 text-gray-600'}
-                                    `}>
-                                        Размер: {product.size}
-                                    </span>
+                                <h2 className="text-lg font-semibold text-tg-text leading-tight tracking-tight">
+                                    {product.name}
+                                </h2>
+                                {product.team && (
+                                    <p className="text-sm text-tg-hint mt-1">
+                                        {product.team}
+                                    </p>
                                 )}
-                                <span className={`
-                                    px-3 py-1.5 rounded-lg text-sm font-medium
-                                    ${isDark ? 'bg-emerald-500/15 text-emerald-400' : 'bg-emerald-50 text-emerald-600'}
-                                `}>
-                                    Оригинал
-                                </span>
                             </div>
+                            <span className="text-lg font-semibold text-tg-text flex-shrink-0 tracking-tight">
+                                {formatPrice(product.price)}
+                            </span>
+                        </div>
+
+                        {/* Tags */}
+                        <div className="flex flex-wrap gap-2 mb-5">
+                            {product.size && (
+                                <span className="px-3 py-1.5 rounded-lg text-sm font-medium surface-soft text-tg-text">
+                                    Размер: {product.size}
+                                </span>
+                            )}
+                            <span className="px-3 py-1.5 rounded-lg text-sm font-medium surface-soft text-tg-text">
+                                Оригинал
+                            </span>
+                        </div>
 
                             {/* Description */}
                             <p className="text-sm text-tg-hint leading-relaxed">
@@ -243,10 +202,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                         <div
                             className={`
                                 flex-shrink-0 p-4 pb-6
-                                ${isDark 
-                                    ? 'bg-[#0f0f11] border-t border-white/[0.06]' 
-                                    : 'bg-white border-t border-black/[0.04]'
-                                }
+                                bg-[var(--tg-surface-1)] border-t border-[var(--tg-border-subtle)]
                             `}
                             style={{ paddingBottom: 'calc(var(--safe-area-bottom-effective) + 18px)' }}
                         >
@@ -267,10 +223,8 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                                         w-14 h-14 rounded-xl flex items-center justify-center
                                         transition-colors tap-target
                                         ${isLiked
-                                            ? 'bg-red-500/15 text-red-500'
-                                            : isDark
-                                                ? 'bg-white/[0.06] text-white/60 hover:bg-white/[0.08]'
-                                                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                                            ? 'badge-contrast'
+                                            : 'icon-button'
                                         }
                                     `}
                                     whileTap={{ scale: 0.92 }}
@@ -300,9 +254,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                                         flex items-center justify-center gap-2
                                         transition-all tap-target
                                         ${inCart
-                                            ? isDark
-                                                ? 'bg-tg-success/20 text-tg-success cursor-default'
-                                                : 'bg-emerald-50 text-emerald-600 cursor-default'
+                                            ? 'btn-secondary text-tg-text cursor-default'
                                             : 'btn-primary'
                                         }
                                     `}
@@ -330,45 +282,47 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                                         closeFullscreen();
                                     }
                                 }}
-                                className="fixed inset-0 z-[80] flex flex-col bg-gradient-to-b from-black via-black/92 to-black"
+                                className="fixed inset-0 z-[80] flex flex-col bg-[var(--tg-gallery-bg)] text-white"
                                 style={{
                                     paddingTop: 'calc(var(--safe-area-top-effective) + 10px)',
                                     paddingBottom: 'calc(var(--safe-area-bottom-effective) + 12px)',
                                 }}
                             >
                                 {/* Header */}
-                                <div className="flex items-center justify-between px-4 pb-3">
-                                    <div className="h-10 px-3 rounded-full bg-white/10 text-white/80 text-sm font-medium backdrop-blur-md border border-white/10 flex items-center gap-2 shadow-lg">
-                                        <span>{activeIndex + 1} / {images.length}</span>
-                                        <span className="w-1 h-1 rounded-full bg-white/30" />
-                                        <span className="text-white/60">Свайп вниз, чтобы закрыть</span>
+                                <div className="pb-2">
+                                    <div className="flex justify-center pb-2">
+                                        <span className="h-1 w-10 rounded-full bg-white/20" />
                                     </div>
-                                    <button
-                                        onClick={closeFullscreen}
-                                        className="w-11 h-11 rounded-full bg-white/12 text-white flex items-center justify-center tap-target backdrop-blur-lg border border-white/15 shadow-[0_10px_30px_rgba(0,0,0,0.4)]"
-                                        aria-label="Закрыть"
-                                    >
-                                        <X size={20} />
-                                    </button>
+                                    <div className="grid grid-cols-[auto,1fr,auto] items-center px-4">
+                                        <button
+                                            onClick={closeFullscreen}
+                                            className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center tap-target backdrop-blur-lg border border-white/15 shadow-[0_10px_30px_rgba(0,0,0,0.4)]"
+                                            aria-label="Закрыть"
+                                        >
+                                            <X size={18} />
+                                        </button>
+                                        <span className="text-[11px] uppercase tracking-[0.35em] text-white/70 justify-self-center">
+                                            {activeIndex + 1} / {images.length}
+                                        </span>
+                                        <div className="w-10" />
+                                    </div>
                                 </div>
 
                                 {/* Image */}
                                 <Swiper
-                                    modules={[Navigation]}
-                                    navigation
                                     initialSlide={activeIndex}
                                     onSlideChange={(swiper) => setActiveIndex(swiper.activeIndex)}
                                     className="flex-1 w-full"
                                 >
                                     {images.map((image) => (
                                         <SwiperSlide key={`${image}-fullscreen`}>
-                                            <div className="h-full w-full flex items-center justify-center px-5">
+                                            <div className="h-full w-full flex items-center justify-center px-3">
                                                 <img
                                                     src={resolveAssetUrl(image)}
                                                     alt={product.name}
                                                     loading="lazy"
                                                     decoding="async"
-                                                    className="max-h-[calc(var(--tg-viewport-height)-120px)] max-w-full object-contain drop-shadow-2xl"
+                                                    className="max-h-[calc(var(--tg-viewport-height)-96px)] max-w-[92vw] object-contain drop-shadow-2xl"
                                                 />
                                             </div>
                                         </SwiperSlide>

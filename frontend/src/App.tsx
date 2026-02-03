@@ -9,13 +9,11 @@ import { useToast } from './components/Toast';
 import { useStore } from './store/useStore';
 import type { Product } from './types';
 import apiClient from './api/client';
-import { Search, Sun, Moon, ChevronDown, Package } from 'lucide-react';
+import { Search, ChevronDown, Package } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import WebApp from '@twa-dev/sdk';
 import { formatPrice } from './utils/currency';
 import { useTheme } from './context/ThemeContext';
-import logoDark from './assets/logo_dark.png';
-import logoLight from './assets/logo_white.png';
 import { SlidingNumber } from './components/animate-ui/primitives/texts/sliding-number';
 import haptics from './utils/haptics';
 
@@ -47,10 +45,9 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
   const [direction, setDirection] = useState(0);
-  const [userPhoto, setUserPhoto] = useState<string | null>(null);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const { toggleTheme, isDark } = useTheme();
+  const { palette } = useTheme();
   const [catalogFilter, setCatalogFilter] = useState<'jerseys' | 'posters'>('jerseys');
   const [sizeFilter, setSizeFilter] = useState('all');
   const [sortOption, setSortOption] = useState<'default' | 'price-asc' | 'price-desc' | 'name-asc'>('default');
@@ -125,11 +122,6 @@ function App() {
     return () => clearTimeout(delayDebounceFn);
   }, [searchQuery, fetchProducts, catalogCategory]);
 
-  // User photo from Telegram
-  useEffect(() => {
-    const photoUrl = WebApp.initDataUnsafe?.user?.photo_url || null;
-    setUserPhoto(photoUrl);
-  }, []);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // TELEGRAM MAIN BUTTON INTEGRATION
@@ -142,8 +134,8 @@ function App() {
       // Show Main Button for checkout
       try {
         WebApp.MainButton.setText(`Оформить заказ • ${formatPrice(total)}`);
-        WebApp.MainButton.color = '#2563eb';
-        WebApp.MainButton.textColor = '#ffffff';
+        WebApp.MainButton.color = palette.button;
+        WebApp.MainButton.textColor = palette.buttonText;
         WebApp.MainButton.show();
         WebApp.MainButton.enable();
         
@@ -167,11 +159,11 @@ function App() {
       // Hide Main Button on other tabs
       try {
         WebApp.MainButton.hide();
-      } catch (e) {
+      } catch {
         // Ignore
       }
     }
-  }, [activeTab, cart, isCheckoutLoading]);
+  }, [activeTab, cart, isCheckoutLoading, palette.button, palette.buttonText]);
 
   const handleTabChange = (tab: string) => {
     if (tab === activeTab) return;
@@ -181,9 +173,6 @@ function App() {
     setDirection(currentIndex === -1 || nextIndex === -1 ? 0 : nextIndex > currentIndex ? 1 : -1);
     setActiveTab(tab);
   };
-
-  const [logoFailed, setLogoFailed] = useState(false);
-  useEffect(() => { setLogoFailed(false); }, [isDark]);
 
   const sizeOptions = useMemo(() => {
     const sizes = new Set<string>();
@@ -222,7 +211,7 @@ function App() {
     
     try {
       WebApp.MainButton.showProgress(true);
-    } catch (e) {
+    } catch {
       // Ignore
     }
     
@@ -244,7 +233,7 @@ function App() {
       setIsCheckoutLoading(false);
       try {
         WebApp.MainButton.hideProgress();
-      } catch (e) {
+      } catch {
         // Ignore
       }
     }
@@ -297,65 +286,21 @@ function App() {
     <PullToRefresh onRefresh={handleRefresh} disabled={isLoading}>
       <div className="space-y-5">
         {/* Header */}
-        <header className="flex items-center justify-between gap-4">
-          {/* Theme toggle */}
-          <motion.button
-            onClick={() => {
-              haptics.tap();
-              toggleTheme();
-            }}
-            aria-label="Сменить тему"
-            className={`
-              w-11 h-11 rounded-xl flex items-center justify-center
-              transition-colors duration-200 tap-target
-              ${isDark 
-                ? 'bg-white/[0.08] text-white/80 hover:bg-white/[0.12] active:bg-white/[0.16]' 
-                : 'bg-black/[0.04] text-gray-600 hover:bg-black/[0.06] active:bg-black/[0.08]'
-              }
-            `}
-            whileTap={{ scale: 0.92 }}
-          >
-            {isDark ? <Sun size={20} /> : <Moon size={20} />}
-          </motion.button>
-          
-          {/* Logo */}
-          <div className="flex-1 flex justify-center">
-            {!logoFailed ? (
-              <img
-                src={isDark ? logoLight : logoDark}
-                alt="RooneyForm"
-                className="h-8 w-auto select-none pointer-events-none"
-                draggable={false}
-                onError={() => setLogoFailed(true)}
-              />
-            ) : (
-              <span className="text-lg font-bold tracking-tight text-tg-text">
-                RooneyForm
-              </span>
-            )}
-          </div>
-          
-          {/* Avatar */}
-          <div className={`
-            w-11 h-11 rounded-xl overflow-hidden
-            flex items-center justify-center
-            ${isDark 
-              ? 'bg-gradient-to-br from-blue-500/80 to-purple-600/80' 
-              : 'bg-gradient-to-br from-blue-500 to-purple-600'
-            }
-          `}>
-            {userPhoto ? (
-              <img src={userPhoto} alt="" className="w-full h-full object-cover" />
-            ) : null}
+        <header className="flex items-center gap-4">
+          <div className="flex flex-col">
+            <span className="text-[15px] font-semibold tracking-tight text-tg-text">Каталог</span>
+            <span className="text-[10px] uppercase tracking-[0.32em] text-tg-hint">
+              RooneyForm
+            </span>
           </div>
         </header>
 
         {/* Search */}
         <div className="relative">
-          <Search className={`absolute left-4 top-1/2 -translate-y-1/2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} size={20} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-tg-hint" size={20} />
           <input
             type="text"
-            placeholder="Найти футболку..."
+            placeholder="Поиск по каталогу"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="input-search"
@@ -386,10 +331,7 @@ function App() {
 
         {/* Filters - only for jerseys */}
         {catalogFilter === 'jerseys' && (
-          <div className={`
-            rounded-2xl p-4 space-y-4
-            ${isDark ? 'bg-white/[0.04]' : 'bg-black/[0.02]'}
-          `}>
+          <div className="surface-muted rounded-2xl p-4 space-y-4">
             {/* Size filters */}
             <div>
               <div className="flex items-center justify-between mb-3">
@@ -432,16 +374,7 @@ function App() {
                   haptics.tap();
                   setShowSortDropdown(!showSortDropdown);
                 }}
-                className={`
-                  w-full h-12 px-4 rounded-xl
-                  flex items-center justify-between
-                  text-sm font-medium
-                  transition-colors duration-200
-                  ${isDark 
-                    ? 'bg-white/[0.06] text-white/90 hover:bg-white/[0.08]' 
-                    : 'bg-white text-gray-700 shadow-xs hover:bg-gray-50'
-                  }
-                `}
+                className="w-full h-12 px-4 rounded-xl flex items-center justify-between text-sm font-medium transition-colors duration-200 surface-card"
               >
                 <span>{sortLabels[sortOption]}</span>
                 <ChevronDown size={18} className={`transition-transform ${showSortDropdown ? 'rotate-180' : ''}`} />
@@ -454,11 +387,7 @@ function App() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.96 }}
                     transition={{ duration: 0.15 }}
-                    className={`
-                      absolute top-full left-0 right-0 mt-2 z-20
-                      rounded-xl overflow-hidden shadow-lg
-                      ${isDark ? 'bg-[#1a1a1d] border border-white/[0.08]' : 'bg-white border border-black/[0.04]'}
-                    `}
+                    className="absolute top-full left-0 right-0 mt-2 z-20 rounded-xl overflow-hidden surface-card"
                   >
                     {Object.entries(sortLabels).map(([key, label]) => (
                       <button
@@ -472,10 +401,10 @@ function App() {
                           w-full px-4 py-3 text-left text-sm
                           transition-colors duration-150
                           ${sortOption === key 
-                            ? 'text-tg-accent font-medium' 
+                            ? 'text-tg-text font-semibold' 
                             : 'text-tg-text'
                           }
-                          ${isDark ? 'hover:bg-white/[0.04]' : 'hover:bg-gray-50'}
+                          hover:bg-black/5 dark:hover:bg-white/5
                         `}
                       >
                         {label}
@@ -492,19 +421,12 @@ function App() {
         {isLoading ? (
           <ProductGridSkeleton count={6} />
         ) : filteredProducts.length === 0 ? (
-          <div className={`
-            rounded-2xl px-6 py-16 text-center
-            ${isDark ? 'bg-white/[0.04]' : 'bg-black/[0.02]'}
-          `}>
-            <div className={`
-              w-16 h-16 mx-auto mb-4 rounded-2xl
-              flex items-center justify-center
-              ${isDark ? 'bg-white/[0.06] text-white/40' : 'bg-gray-100 text-gray-400'}
-            `}>
+          <div className="surface-muted rounded-2xl px-6 py-16 text-center">
+            <div className="surface-soft w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center text-tg-hint">
               <Search size={28} />
             </div>
             <p className="text-tg-hint text-sm">Ничего не найдено</p>
-            <p className="text-tg-hint/60 text-xs mt-1">Попробуйте изменить фильтры</p>
+            <p className="text-tg-hint opacity-60 text-xs mt-1">Попробуйте изменить фильтры</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
@@ -550,16 +472,13 @@ function App() {
         {/* Header */}
         <div className="flex items-end justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-tg-text">Корзина</h1>
+            <h1 className="text-lg font-semibold text-tg-text">Корзина</h1>
             <p className="text-sm text-tg-hint mt-0.5">
               {cartCount} {cartCount === 1 ? 'товар' : cartCount < 5 ? 'товара' : 'товаров'}
             </p>
           </div>
           {cart.length > 0 && (
-            <div className={`
-              px-4 py-2 rounded-xl text-sm font-semibold
-              ${isDark ? 'bg-tg-accent/20 text-tg-accent' : 'bg-blue-50 text-blue-600'}
-            `}>
+            <div className="surface-soft px-4 py-2 rounded-xl text-sm font-semibold text-tg-text">
               {formatPrice(total)}
             </div>
           )}
@@ -567,19 +486,12 @@ function App() {
 
         {cart.length === 0 ? (
           /* Empty state */
-          <div className={`
-            rounded-2xl px-6 py-16 text-center
-            ${isDark ? 'bg-white/[0.04]' : 'bg-black/[0.02]'}
-          `}>
-            <div className={`
-              w-16 h-16 mx-auto mb-4 rounded-2xl
-              flex items-center justify-center
-              ${isDark ? 'bg-white/[0.06] text-white/40' : 'bg-gray-100 text-gray-400'}
-            `}>
+          <div className="surface-muted rounded-2xl px-6 py-16 text-center">
+            <div className="surface-soft w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center text-tg-hint">
               <Package size={28} />
             </div>
             <p className="text-tg-hint text-sm">Корзина пуста</p>
-            <p className="text-tg-hint/60 text-xs mt-1">Добавьте товары из каталога</p>
+            <p className="text-tg-hint opacity-60 text-xs mt-1">Добавьте товары из каталога</p>
           </div>
         ) : (
           <>
@@ -610,13 +522,7 @@ function App() {
             </div>
 
             {/* Summary */}
-            <div className={`
-              rounded-2xl p-5 space-y-4
-              ${isDark 
-                ? 'bg-[#1a1a1d] border border-white/[0.06]' 
-                : 'bg-white border border-black/[0.04] shadow-card'
-              }
-            `}>
+            <div className="surface-card rounded-2xl p-5 space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-tg-hint">Товары</span>
                 <span className="text-sm text-tg-text">{formatPrice(total)}</span>
@@ -662,28 +568,21 @@ function App() {
     <div className="space-y-5">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-tg-text">Избранное</h1>
+        <h1 className="text-lg font-semibold text-tg-text">Избранное</h1>
         <p className="text-sm text-tg-hint mt-0.5">
           {favorites.length} {favorites.length === 1 ? 'товар' : favorites.length < 5 ? 'товара' : 'товаров'}
         </p>
       </div>
 
       {favorites.length === 0 ? (
-        <div className={`
-          rounded-2xl px-6 py-16 text-center
-          ${isDark ? 'bg-white/[0.04]' : 'bg-black/[0.02]'}
-        `}>
-          <div className={`
-            w-16 h-16 mx-auto mb-4 rounded-2xl
-            flex items-center justify-center
-            ${isDark ? 'bg-white/[0.06] text-white/40' : 'bg-gray-100 text-gray-400'}
-          `}>
+          <div className="surface-muted rounded-2xl px-6 py-16 text-center">
+          <div className="surface-soft w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center text-tg-hint">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
             </svg>
           </div>
           <p className="text-tg-hint text-sm">Список пуст</p>
-          <p className="text-tg-hint/60 text-xs mt-1">Добавляйте понравившиеся товары</p>
+          <p className="text-tg-hint opacity-60 text-xs mt-1">Добавляйте понравившиеся товары</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3">
@@ -751,6 +650,7 @@ function App() {
         {selectedProduct && (
           <Suspense fallback={null}>
             <ProductModal
+              key={selectedProduct.id}
               product={selectedProduct}
               onClose={() => setSelectedProduct(null)}
             />
