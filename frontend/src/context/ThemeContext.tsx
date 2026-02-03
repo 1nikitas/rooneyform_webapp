@@ -3,7 +3,19 @@ import WebApp from '@twa-dev/sdk';
 
 type ThemeMode = 'light' | 'dark';
 
-const palettes: Record<ThemeMode, Record<string, string>> = {
+type HexColor = `#${string}`;
+
+type Palette = {
+    bg: HexColor;
+    text: HexColor;
+    hint: HexColor;
+    button: HexColor;
+    buttonText: HexColor;
+    secondary: HexColor;
+    accent: HexColor;
+};
+
+const palettes: Record<ThemeMode, Palette> = {
     light: {
         bg: '#f5f5f3',
         text: '#101010',
@@ -60,7 +72,7 @@ interface ThemeContextValue {
     theme: ThemeMode;
     toggleTheme: () => void;
     setTheme: (theme: ThemeMode) => void;
-    palette: Record<string, string>;
+    palette: Palette;
     isDark: boolean;
 }
 
