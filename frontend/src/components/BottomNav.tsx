@@ -97,7 +97,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onTabChange })
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30, delay: 0.1 }}
-            className={`fixed tg-safe-nav left-1/2 z-50 -translate-x-1/2 
+            className={`fixed tg-safe-nav left-0 right-0 mx-auto z-50 
                 w-[min(380px,calc(100%-32px))] h-[68px] 
                 glass rounded-2xl border border-[var(--tg-border-subtle)]
                 flex justify-around items-center px-2
