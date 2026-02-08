@@ -18,6 +18,7 @@ class Product(Base):
     name = Column(String, index=True)
     description = Column(Text)
     price = Column(Float)
+    tg_post_url = Column(String, nullable=True)
     team = Column(String)  # e.g., "Manchester United 2008"
     size = Column(String)  # e.g., "M", "L"
     brand = Column(String, nullable=True)  # e.g., "Adidas", "Nike"

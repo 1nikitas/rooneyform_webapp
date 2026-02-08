@@ -15,6 +15,7 @@ class ProductBase(BaseModel):
     name: str
     description: Optional[str] = None
     price: float
+    tg_post_url: Optional[str] = None
     team: Optional[str] = None
     size: Optional[str] = None
     brand: Optional[str] = None
@@ -36,6 +37,7 @@ class ProductCreate(BaseModel):
     name: str
     description: Optional[str] = None
     price: float
+    tg_post_url: Optional[str] = None
     team: Optional[str] = None
     size: Optional[str] = None
     brand: Optional[str] = None
@@ -50,6 +52,7 @@ class ProductUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     price: Optional[float] = None
+    tg_post_url: Optional[str] = None
     team: Optional[str] = None
     size: Optional[str] = None
     brand: Optional[str] = None

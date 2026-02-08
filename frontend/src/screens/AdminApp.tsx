@@ -87,6 +87,7 @@ export default function AdminApp() {
     name: '',
     description: '',
     price: '',
+    tg_post_url: '',
     team: '',
     size: 'L',
     brand: '',
@@ -100,6 +101,7 @@ export default function AdminApp() {
     name: '',
     description: '',
     price: '',
+    tg_post_url: '',
     team: '',
     size: '',
     brand: '',
@@ -281,6 +283,7 @@ export default function AdminApp() {
       name: product.name,
       description: product.description ?? '',
       price: String(product.price ?? ''),
+      tg_post_url: product.tg_post_url ?? '',
       team: product.team ?? '',
       size: product.size ?? '',
       brand: product.brand ?? '',
@@ -425,7 +428,7 @@ export default function AdminApp() {
         image_url: uploadedFiles[0],
         gallery: uploadedFiles.slice(1),
       });
-      setForm({ ...form, name: '', description: '', price: '' });
+      setForm({ ...form, name: '', description: '', price: '', tg_post_url: '' });
       resetUploads();
       loadProducts();
     } catch (error) {
@@ -597,6 +600,13 @@ export default function AdminApp() {
               <form className="space-y-3" onSubmit={handleSubmit}>
                 <input className="tg-input" name="name" placeholder="Название" value={form.name} onChange={handleChange} required />
                 <textarea className="tg-input" name="description" placeholder="Описание" value={form.description} onChange={handleChange} />
+                <input
+                  className="tg-input"
+                  name="tg_post_url"
+                  placeholder="Ссылка на пост в Telegram"
+                  value={form.tg_post_url}
+                  onChange={handleChange}
+                />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <input className="tg-input" name="price" placeholder="Цена (₽)" value={form.price} onChange={handleChange} required type="number" min="0" />
                   {!isPosterTab && (
@@ -1035,6 +1045,16 @@ export default function AdminApp() {
                       value={editForm.description}
                       onChange={handleEditChange}
                       rows={4}
+                    />
+                  </label>
+                  <label className="text-xs font-semibold text-tg-hint space-y-1">
+                    <span className="uppercase tracking-wide text-[11px]">Ссылка на пост в Telegram</span>
+                    <input
+                      className="tg-input"
+                      name="tg_post_url"
+                      placeholder="https://t.me/..."
+                      value={editForm.tg_post_url}
+                      onChange={handleEditChange}
                     />
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

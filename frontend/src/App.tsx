@@ -223,17 +223,30 @@ function App() {
       const res = await apiClient.post('/orders/');
       await fetchCart();
       const orderId = (res.data as { id?: number } | undefined)?.id;
-      
+
+      const orderEntries: string[] = [];
+      cart.forEach((item) => {
+        const label = item.product.category?.slug === 'posters' ? 'плакат' : 'футболка';
+        const link = item.product.tg_post_url?.trim();
+        const entry = link ? `${label} — ${link}` : label;
+        for (let i = 0; i < Math.max(1, item.quantity); i += 1) {
+          orderEntries.push(entry);
+        }
+      });
+      const orderList = orderEntries.length ? orderEntries.join(', ') : 'товар';
+      const message = `Здравствуйте! Хотел бы сделать заказ: ${orderList}. Что для этого нужно сделать?`;
+      const tgChatUrl = `https://t.me/rooneyform_admin?text=${encodeURIComponent(message)}`;
+
       haptics.success();
-      showToast('success', orderId ? `Заказ #${orderId} создан! Напишите @rooneyform_admin` : 'Заказ создан! Напишите @rooneyform_admin');
+      showToast('success', orderId ? `Заказ #${orderId} создан!` : 'Заказ создан!');
       
       // Open Telegram chat with admin for order confirmation
       try {
-        WebApp.openTelegramLink('https://t.me/rooneyform_admin');
+        WebApp.openTelegramLink(tgChatUrl);
       } catch {
         // Fallback: try opening link directly
         try {
-          window.open('https://t.me/rooneyform_admin', '_blank');
+          window.open(tgChatUrl, '_blank');
         } catch {
           // Ignore
         }

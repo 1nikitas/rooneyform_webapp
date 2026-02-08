@@ -173,6 +173,7 @@ async def create_product(
         name=payload.name,
         description=payload.description,
         price=payload.price,
+        tg_post_url=payload.tg_post_url,
         team=payload.team,
         size=payload.size,
         brand=payload.brand,

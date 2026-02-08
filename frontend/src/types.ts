@@ -9,6 +9,7 @@ export interface Product {
     name: string;
     description: string;
     price: number;
+    tg_post_url?: string;
     team: string;
     size: string;
     brand: string;
