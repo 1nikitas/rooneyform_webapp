@@ -281,7 +281,7 @@ async def get_orders(
 
 @router.patch("/orders/{order_id}", response_model=OrderSchema)
 async def update_order_status(order_id: int, payload: OrderStatusUpdate, db: AsyncSession = Depends(get_db)):
-    stmt = select(Order).where(Order.id == order_id)
+    stmt = select(Order).options(selectinload(Order.items)).where(Order.id == order_id)
     res = await db.execute(stmt)
     order = res.scalar_one_or_none()
     if not order:

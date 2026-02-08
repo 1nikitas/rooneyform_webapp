@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Product } from '../types';
-import { X, Heart, ShoppingCart, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Heart, ShoppingCart, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import type { Swiper as SwiperType } from 'swiper/types';
@@ -21,6 +21,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
     const { addToCart, toggleFavorite, favorites, cart, pendingCartIds } = useStore();
     const [activeIndex, setActiveIndex] = useState(0);
     const [swiperRef, setSwiperRef] = useState<SwiperType | null>(null);
+    const [fullscreenSwiperRef, setFullscreenSwiperRef] = useState<SwiperType | null>(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const { showToast } = useToast();
 
@@ -79,13 +80,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
     const inCart = cart.some(item => item.product.id === product.id) || pendingCartIds.includes(product.id);
     const hasMultipleImages = images.length > 1;
 
-    const goFullscreenPrev = () => {
-        setActiveIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
-    };
-    const goFullscreenNext = () => {
-        setActiveIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
-    };
-
     return (
         <AnimatePresence>
             {product && (
@@ -114,21 +108,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                             bg-[var(--tg-surface-1)] border-t border-[var(--tg-border-subtle)]
                         `}
                     >
-                        {/* Close button */}
-                        <button
-                            onClick={onClose}
-                            className={`
-                                absolute top-4 left-4 z-30
-                                w-10 h-10 rounded-xl
-                                flex items-center justify-center
-                                tap-target
-                                icon-button backdrop-blur-md transition-colors
-                            `}
-                            aria-label="Закрыть"
-                        >
-                            <X size={20} />
-                        </button>
-
                         {/* Image Gallery */}
                         <div className="relative flex-shrink-0 bg-[var(--tg-surface-2)]" style={{ height: '50vh', maxHeight: '420px' }}>
                             <Swiper
@@ -308,7 +287,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                         </div>
                     </motion.div>
 
-                    {/* Simple Fullscreen Gallery - fixed overlay, no drag */}
+                    {/* Fullscreen Gallery */}
                     {isFullscreen && (
                         <div
                             className="fixed inset-0 z-[80] bg-black flex flex-col"
@@ -317,37 +296,20 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                                 paddingBottom: 'env(safe-area-inset-bottom, 0px)',
                             }}
                         >
-                            {/* Header */}
-                            <div className="flex-shrink-0 flex items-center justify-between px-4 py-3">
-                                <button
-                                    onClick={closeFullscreen}
-                                    className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center tap-target"
-                                    aria-label="Закрыть"
-                                >
-                                    <X size={18} />
-                                </button>
-                                {hasMultipleImages && (
-                                    <span className="text-[12px] uppercase tracking-[0.25em] text-white/60 font-medium">
-                                        {activeIndex + 1} / {images.length}
-                                    </span>
-                                )}
-                                <div className="w-10" />
-                            </div>
-
                             {/* Image area */}
                             <div className="flex-1 flex items-center justify-center relative min-h-0">
                                 {/* Navigation arrows */}
                                 {hasMultipleImages && (
                                     <>
                                         <button
-                                            onClick={goFullscreenPrev}
+                                            onClick={() => fullscreenSwiperRef?.slidePrev()}
                                             className="absolute left-2 z-10 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center tap-target"
                                             aria-label="Предыдущее фото"
                                         >
                                             <ChevronLeft size={20} />
                                         </button>
                                         <button
-                                            onClick={goFullscreenNext}
+                                            onClick={() => fullscreenSwiperRef?.slideNext()}
                                             className="absolute right-2 z-10 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center tap-target"
                                             aria-label="Следующее фото"
                                         >
@@ -356,33 +318,53 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                                     </>
                                 )}
 
-                                {/* Current image */}
-                                <img
-                                    src={resolveAssetUrl(images[activeIndex])}
-                                    alt={`${product.name} ${activeIndex + 1}`}
-                                    className="max-h-full max-w-full object-contain px-4"
-                                    onClick={closeFullscreen}
-                                    draggable={false}
-                                />
+                                <Swiper
+                                    onSwiper={setFullscreenSwiperRef}
+                                    onSlideChange={(swiper) => setActiveIndex(swiper.activeIndex)}
+                                    initialSlide={activeIndex}
+                                    className="h-full w-full"
+                                >
+                                    {images.map((image, idx) => (
+                                        <SwiperSlide key={`fullscreen-${image}-${idx}`}>
+                                            <button
+                                                type="button"
+                                                className="h-full w-full flex items-center justify-center focus:outline-none"
+                                                onClick={closeFullscreen}
+                                            >
+                                                <img
+                                                    src={resolveAssetUrl(image)}
+                                                    alt={`${product.name} ${idx + 1}`}
+                                                    className="max-h-full max-w-full object-contain px-4"
+                                                    draggable={false}
+                                                />
+                                            </button>
+                                        </SwiperSlide>
+                                    ))}
+                                </Swiper>
                             </div>
 
-                            {/* Thumbnail dots */}
+                            {/* Count + Thumbnail dots */}
                             {hasMultipleImages && (
-                                <div className="flex-shrink-0 flex justify-center gap-2 py-4">
-                                    {images.map((_, idx) => (
-                                        <button
-                                            key={idx}
-                                            onClick={() => setActiveIndex(idx)}
-                                            className={`
-                                                rounded-full transition-all duration-200
-                                                ${activeIndex === idx 
-                                                    ? 'w-7 h-2 bg-white' 
-                                                    : 'w-2 h-2 bg-white/30'
-                                                }
-                                            `}
-                                            aria-label={`Фото ${idx + 1}`}
-                                        />
-                                    ))}
+                                <div className="flex-shrink-0 flex flex-col items-center gap-2 py-4">
+                                    <span className="text-[12px] uppercase tracking-[0.25em] text-white/60 font-medium">
+                                        {activeIndex + 1} / {images.length}
+                                    </span>
+                                    <div className="flex justify-center gap-2">
+                                        {images.map((_, idx) => (
+                                            <button
+                                                key={idx}
+                                                onClick={() => fullscreenSwiperRef?.slideTo(idx)}
+                                                className={`
+                                                    rounded-full transition-all duration-200
+                                                    ${activeIndex === idx 
+                                                        ? 'w-7 h-2 bg-white' 
+                                                        : 'w-2 h-2 bg-white/30'
+                                                    }
+                                                `}
+                                                aria-label={`Фото ${idx + 1}`}
+                                            />
+                                        ))}
+                                    </div>
                                 </div>
                             )}
                         </div>

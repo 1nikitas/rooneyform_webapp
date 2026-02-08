@@ -451,21 +451,44 @@ export default function AdminApp() {
   const sliderPercent = ((daysRange - 1) / (MAX_SLIDER_DAYS - 1)) * 100;
   const timelineOrders = useMemo(() => {
     if (!orders.length || rangeDuration <= 0) return [];
-    return [...orders]
-      .sort(
-        (a, b) =>
-          new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
-      )
-      .map((order, index) => {
-        const orderTime = new Date(order.created_at).getTime();
-        const ratio = (orderTime - rangeStartMs) / rangeDuration;
-        const clampedRatio = Math.min(0.96, Math.max(0.04, ratio));
-        return {
-          order,
-          position: clampedRatio * 100,
-          alignTop: index % 2 === 0,
-        };
+    const MIN_EDGE = 4;
+    const MAX_EDGE = 96;
+    const MIN_GAP = 10;
+    const MAX_ATTEMPTS = 8;
+    const sorted = [...orders].sort(
+      (a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+    );
+    const placed: Array<{ order: Order; position: number; alignTop: boolean }> = [];
+
+    sorted.forEach((order, index) => {
+      const orderTime = new Date(order.created_at).getTime();
+      const ratio = (orderTime - rangeStartMs) / rangeDuration;
+      const basePosition = Math.min(MAX_EDGE, Math.max(MIN_EDGE, ratio * 100));
+      let position = basePosition;
+      let attempts = 0;
+
+      while (
+        placed.some((entry) => Math.abs(entry.position - position) < MIN_GAP) &&
+        attempts < MAX_ATTEMPTS
+      ) {
+        attempts += 1;
+        const direction = attempts % 2 === 0 ? 1 : -1;
+        const step = Math.ceil(attempts / 2) * (MIN_GAP / 2);
+        position = Math.min(
+          MAX_EDGE,
+          Math.max(MIN_EDGE, basePosition + direction * step),
+        );
+      }
+
+      placed.push({
+        order,
+        position,
+        alignTop: index % 2 === 0,
       });
+    });
+
+    return placed;
   }, [orders, rangeStartMs, rangeDuration]);
   const timelineLabels = useMemo(() => {
     if (rangeDuration <= 0) return [];
@@ -513,9 +536,9 @@ export default function AdminApp() {
       if (selectedOrder?.id === orderId) {
         setSelectedOrder(res.data);
       }
-      await loadOrders(rangeStart, rangeEnd);
     } catch (error) {
       console.error('Не удалось обновить статус заказа', error);
+      alert('Не удалось обновить статус заказа. Попробуйте еще раз.');
     }
   };
   const formatOrderMoment = (value: string) =>

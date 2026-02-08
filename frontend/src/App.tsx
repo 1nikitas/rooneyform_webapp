@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, lazy, Suspense } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Layout } from './components/Layout';
 import { ProductCard } from './components/ProductCard';
 import { BottomNav } from './components/BottomNav';
@@ -20,9 +20,7 @@ import { BRANDS, LEAGUES, LEAGUE_CLUBS, SEASONS, KIT_TYPES } from './constants/r
 const TAB_ORDER = ['home', 'cart', 'favorites'] as const;
 const PRODUCT_LIMIT = 300;
 
-const ProductModal = lazy(() =>
-  import('./components/ProductModal').then((module) => ({ default: module.ProductModal })),
-);
+import { ProductModal } from './components/ProductModal';
 
 const tabVariants = {
   enter: (direction: number) => ({
@@ -839,13 +837,11 @@ function App() {
 
       <AnimatePresence>
         {selectedProduct && (
-          <Suspense fallback={null}>
-            <ProductModal
-              key={selectedProduct.id}
-              product={selectedProduct}
-              onClose={() => setSelectedProduct(null)}
-            />
-          </Suspense>
+          <ProductModal
+            key={selectedProduct.id}
+            product={selectedProduct}
+            onClose={() => setSelectedProduct(null)}
+          />
         )}
       </AnimatePresence>
       
