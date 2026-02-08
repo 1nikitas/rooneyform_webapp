@@ -6,6 +6,8 @@ import { useStore } from '../store/useStore';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import type { Swiper as SwiperType } from 'swiper/types';
 import 'swiper/css';
+import 'swiper/css/zoom';
+import { Zoom } from 'swiper/modules';
 import WebApp from '@twa-dev/sdk';
 import { formatPrice } from '../utils/currency';
 import { resolveAssetUrl } from '../utils/assets';
@@ -133,7 +135,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                                                 loading={idx === 0 ? 'eager' : 'lazy'}
                                                 decoding="async"
                                                 fetchPriority={idx === 0 ? 'high' : 'auto'}
-                                                className="h-full w-full object-contain"
+                                                className="h-full w-full object-cover"
                                             />
                                         </button>
                                     </SwiperSlide>
@@ -289,13 +291,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
 
                     {/* Fullscreen Gallery */}
                     {isFullscreen && (
-                        <div
-                            className="fixed inset-0 z-[80] bg-black flex flex-col"
-                            style={{
-                                paddingTop: 'env(safe-area-inset-top, 0px)',
-                                paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-                            }}
-                        >
+                        <div className="fixed inset-0 z-[80] bg-black flex flex-col">
                             {/* Image area */}
                             <div className="flex-1 flex items-center justify-center relative min-h-0 px-4">
                                 {/* Navigation arrows */}
@@ -322,24 +318,22 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                                     onSwiper={setFullscreenSwiperRef}
                                     onSlideChange={(swiper) => setActiveIndex(swiper.activeIndex)}
                                     initialSlide={activeIndex}
+                                    zoom
+                                    modules={[Zoom]}
                                     className="h-full w-full"
                                 >
                                     {images.map((image, idx) => (
                                         <SwiperSlide key={`fullscreen-${image}-${idx}`}>
-                                            <button
-                                                type="button"
-                                                className="h-full w-full flex items-center justify-center focus:outline-none"
-                                                onClick={closeFullscreen}
-                                            >
-                                                <div className="h-full w-full overflow-hidden rounded-3xl bg-black/20">
+                                            <div className="h-full w-full flex items-center justify-center">
+                                                <div className="swiper-zoom-container h-full w-full flex items-center justify-center">
                                                     <img
                                                         src={resolveAssetUrl(image)}
                                                         alt={`${product.name} ${idx + 1}`}
-                                                        className="h-full w-full object-cover"
+                                                        className="max-h-full max-w-full object-contain"
                                                         draggable={false}
                                                     />
                                                 </div>
-                                            </button>
+                                            </div>
                                         </SwiperSlide>
                                     ))}
                                 </Swiper>
