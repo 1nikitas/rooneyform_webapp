@@ -102,6 +102,14 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                         animate={{ y: 0 }}
                         exit={{ y: '100%' }}
                         transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                        drag="y"
+                        dragConstraints={{ top: 0, bottom: 140 }}
+                        dragElastic={0.2}
+                        onDragEnd={(_, info) => {
+                            if (info.offset.y > 120 || info.velocity.y > 800) {
+                                onClose();
+                            }
+                        }}
                         className={`
                             fixed inset-x-0 bottom-0 z-[60]
                             h-[92vh] overflow-hidden
