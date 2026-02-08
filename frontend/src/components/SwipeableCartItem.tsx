@@ -103,7 +103,7 @@ export const SwipeableCartItem: React.FC<SwipeableCartItemProps> = ({ item, onRe
           </div>
           
           <p className="text-xs text-tg-hint mt-0.5 line-clamp-1">
-            {item.product.team}
+            {[item.product.team, item.product.league, item.product.brand].filter(Boolean).join(' • ')}
           </p>
           
           <div className="flex items-center mt-auto pt-2">

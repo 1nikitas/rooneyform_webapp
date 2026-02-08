@@ -16,6 +16,21 @@ async def ensure_order_status_column(conn):
     if "status" not in columns:
         await conn.execute(text("ALTER TABLE orders ADD COLUMN status VARCHAR(20) DEFAULT 'received'"))
 
+
+async def ensure_product_new_columns(conn):
+    """Add brand, league, season, kit_type columns to products table if missing."""
+    result = await conn.execute(text("PRAGMA table_info('products')"))
+    columns = {row[1] for row in result}
+    new_columns = {
+        "brand": "VARCHAR",
+        "league": "VARCHAR",
+        "season": "VARCHAR",
+        "kit_type": "VARCHAR",
+    }
+    for col_name, col_type in new_columns.items():
+        if col_name not in columns:
+            await conn.execute(text(f"ALTER TABLE products ADD COLUMN {col_name} {col_type}"))
+
 # CORS
 app.add_middleware(
     CORSMiddleware,
@@ -46,6 +61,7 @@ async def startup():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         await ensure_order_status_column(conn)
+        await ensure_product_new_columns(conn)
 
 @app.get("/")
 async def root():

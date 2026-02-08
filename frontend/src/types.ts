@@ -11,6 +11,10 @@ export interface Product {
     price: number;
     team: string;
     size: string;
+    brand: string;
+    league: string;
+    season: string;
+    kit_type: string;
     image_url: string;
     category: Category;
     gallery: string[];

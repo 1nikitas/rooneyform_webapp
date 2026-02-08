@@ -90,7 +90,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                         transition={{ type: 'spring', damping: 30, stiffness: 300 }}
                         className={`
                             fixed inset-x-0 bottom-0 z-[60]
-                            max-h-[92vh] overflow-hidden
+                            h-[92vh] overflow-hidden
                             rounded-t-3xl
                             flex flex-col
                             bg-[var(--tg-surface-1)] border-t border-[var(--tg-border-subtle)]
@@ -112,10 +112,12 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                         </button>
 
                         {/* Image Gallery */}
-                        <div className="relative aspect-[4/5] flex-shrink-0 bg-[var(--tg-surface-2)]">
+                        <div className="relative flex-shrink-0 bg-[var(--tg-surface-2)]" style={{ height: '50vh', maxHeight: '420px' }}>
                             <Swiper
                                 onSwiper={setSwiperRef}
                                 onSlideChange={(swiper) => setActiveIndex(swiper.activeIndex)}
+                                observer
+                                observeParents
                                 className="h-full"
                             >
                                 {images.map((image, idx) => (
@@ -133,6 +135,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                                                 alt={`${product.name} ${idx + 1}`}
                                                 loading={idx === 0 ? 'eager' : 'lazy'}
                                                 decoding="async"
+                                                fetchPriority={idx === 0 ? 'high' : 'auto'}
                                                 className="h-full w-full object-contain"
                                             />
                                         </button>
@@ -162,7 +165,10 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                         </div>
 
                         {/* Content */}
-                        <div className="flex-1 overflow-y-auto overscroll-contain p-5 pb-safe">
+                        <div
+                            className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-5 pb-safe"
+                            style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+                        >
                             {/* Title & Price */}
                             <div className="flex justify-between items-start gap-4 mb-4">
                                 <div className="flex-1 min-w-0">
@@ -187,9 +193,26 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                                     Размер: {product.size}
                                 </span>
                             )}
-                            <span className="px-3 py-1.5 rounded-lg text-sm font-medium surface-soft text-tg-text">
-                                Оригинал
-                            </span>
+                            {product.league && (
+                                <span className="px-3 py-1.5 rounded-lg text-sm font-medium surface-soft text-tg-text">
+                                    {product.league}
+                                </span>
+                            )}
+                            {product.brand && (
+                                <span className="px-3 py-1.5 rounded-lg text-sm font-medium surface-soft text-tg-text">
+                                    {product.brand}
+                                </span>
+                            )}
+                            {product.season && (
+                                <span className="px-3 py-1.5 rounded-lg text-sm font-medium surface-soft text-tg-text">
+                                    {product.season}
+                                </span>
+                            )}
+                            {product.kit_type && (
+                                <span className="px-3 py-1.5 rounded-lg text-sm font-medium surface-soft text-tg-text">
+                                    {product.kit_type}
+                                </span>
+                            )}
                         </div>
 
                             {/* Description */}

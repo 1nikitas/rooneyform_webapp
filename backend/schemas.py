@@ -17,6 +17,10 @@ class ProductBase(BaseModel):
     price: float
     team: Optional[str] = None
     size: Optional[str] = None
+    brand: Optional[str] = None
+    league: Optional[str] = None
+    season: Optional[str] = None
+    kit_type: Optional[str] = None
     image_url: Optional[str] = None
     category_id: Optional[int] = None
 
@@ -34,6 +38,10 @@ class ProductCreate(BaseModel):
     price: float
     team: Optional[str] = None
     size: Optional[str] = None
+    brand: Optional[str] = None
+    league: Optional[str] = None
+    season: Optional[str] = None
+    kit_type: Optional[str] = None
     image_url: Optional[str] = None
     gallery: Optional[List[str]] = None
     category_slug: str
@@ -44,6 +52,10 @@ class ProductUpdate(BaseModel):
     price: Optional[float] = None
     team: Optional[str] = None
     size: Optional[str] = None
+    brand: Optional[str] = None
+    league: Optional[str] = None
+    season: Optional[str] = None
+    kit_type: Optional[str] = None
     image_url: Optional[str] = None
     category_slug: Optional[str] = None
     gallery: Optional[List[str]] = None

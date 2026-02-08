@@ -25,6 +25,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     const { isDark } = useTheme();
     const shouldAnimate = enableSharedLayout;
 
+    // Show league or brand in the corner badge (issue #11)
+    const cornerLabel = product.league || product.brand || '';
+
     return (
         <motion.article
             layoutId={shouldAnimate ? `card-${product.id}` : undefined}
@@ -33,8 +36,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             whileTap={{ scale: 0.985 }}
             transition={{ type: 'spring', stiffness: 420, damping: 30 }}
         >
-            {/* Image Container */}
-            <div className="relative aspect-[4/5] overflow-hidden bg-[var(--tg-surface-2)]">
+            {/* Image Container - more rectangular aspect ratio (3:4) */}
+            <div className="relative aspect-[3/4] overflow-hidden bg-[var(--tg-surface-2)]">
                 <motion.img
                     layoutId={shouldAnimate ? `image-${product.id}` : undefined}
                     src={resolveAssetUrl(coverImage)}
@@ -44,8 +47,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                     decoding="async"
                 />
                 
-                {/* Gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/78 via-black/25 to-transparent" />
+                {/* Subtle gradient only at the very bottom */}
+                <div className="absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
                 
                 {/* Size badge */}
                 {product.size && (
@@ -59,11 +62,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                     onClick={onAdd}
                     disabled={inCart}
                     className={`
-                        absolute top-3 right-3
-                        w-11 h-11 rounded-xl
+                        absolute top-2.5 right-2.5
+                        w-7 h-7 rounded-lg
                         flex items-center justify-center
                         transition-all duration-200 shadow-md
-                        tap-target
                         ${inCart
                             ? 'bg-white/90 text-black cursor-default backdrop-blur-sm'
                             : isDark
@@ -75,32 +77,32 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                     aria-label={inCart ? 'В корзине' : 'Добавить в корзину'}
                 >
                     {inCart ? (
-                        <Check size={18} strokeWidth={2.5} />
+                        <Check size={14} strokeWidth={2.5} />
                     ) : (
-                        <Plus size={18} strokeWidth={2.5} />
+                        <Plus size={14} strokeWidth={2.5} />
                     )}
                 </motion.button>
                 
-                {/* Bottom content */}
-                <div className="absolute inset-x-3 bottom-3 rounded-2xl border border-white/10 bg-black/40 backdrop-blur-lg p-3 shadow-[0_12px_30px_rgba(0,0,0,0.35)]">
+                {/* Bottom content - overlaps only the bottom edge of the jersey */}
+                <div className="absolute inset-x-0 bottom-0 border-t border-white/10 bg-black/50 backdrop-blur-lg px-3 py-2.5">
                     <motion.h3 
                         layoutId={shouldAnimate ? `title-${product.id}` : undefined}
-                        className="text-white font-semibold text-[15px] leading-snug tracking-tight line-clamp-2"
+                        className="text-white font-semibold text-[13px] leading-snug tracking-tight line-clamp-1"
                     >
                         {product.name}
                     </motion.h3>
                     
-                    <div className="flex items-center justify-between mt-2 gap-2">
+                    <div className="flex items-center justify-between mt-1 gap-2">
                         <motion.span 
                             layoutId={shouldAnimate ? `price-${product.id}` : undefined}
-                            className="text-white text-[15px] font-semibold"
+                            className="text-white text-[13px] font-semibold"
                         >
                             {formatPrice(product.price)}
                         </motion.span>
                         
-                        {product.team && (
-                            <span className="text-white/70 text-[12px] font-medium truncate max-w-[55%] leading-none">
-                                {product.team}
+                        {cornerLabel && (
+                            <span className="text-white/60 text-[11px] font-medium truncate max-w-[55%] leading-none">
+                                {cornerLabel}
                             </span>
                         )}
                     </div>

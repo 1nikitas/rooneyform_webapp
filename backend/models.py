@@ -20,6 +20,10 @@ class Product(Base):
     price = Column(Float)
     team = Column(String)  # e.g., "Manchester United 2008"
     size = Column(String)  # e.g., "M", "L"
+    brand = Column(String, nullable=True)  # e.g., "Adidas", "Nike"
+    league = Column(String, nullable=True)  # e.g., "АПЛ", "Ла Лига"
+    season = Column(String, nullable=True)  # e.g., "2023-2026"
+    kit_type = Column(String, nullable=True)  # e.g., "Домашняя", "Гостевая"
     image_url = Column(String) # Relative path to static file
     category_id = Column(Integer, ForeignKey("categories.id"))
     

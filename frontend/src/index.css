@@ -241,7 +241,7 @@ body {
 
 /* Bottom navigation positioning */
 .tg-safe-nav {
-  bottom: calc(var(--safe-area-bottom-effective) + var(--tg-main-button-height-effective) + var(--space-3));
+  bottom: calc(var(--safe-area-bottom-effective) + var(--space-2));
 }
 
 /* Modal sheet positioning */

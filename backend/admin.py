@@ -6,8 +6,8 @@ class CategoryAdmin(ModelView, model=Category):
     form_columns = [Category.name, Category.slug]
 
 class ProductAdmin(ModelView, model=Product):
-    column_list = [Product.id, Product.name, Product.team, Product.price, Product.category]
-    form_columns = [Product.name, Product.description, Product.price, Product.team, Product.size, Product.image_url, Product.category]
+    column_list = [Product.id, Product.name, Product.team, Product.brand, Product.league, Product.price, Product.category]
+    form_columns = [Product.name, Product.description, Product.price, Product.team, Product.size, Product.brand, Product.league, Product.season, Product.kit_type, Product.image_url, Product.category]
 
 class UserAdmin(ModelView, model=User):
     column_list = [User.telegram_id, User.username]

@@ -7,6 +7,7 @@ import type { Product, Order } from '../types';
 import { formatPrice } from '../utils/currency';
 import { resolveAssetUrl } from '../utils/assets';
 import { SlidingNumber } from '../components/animate-ui/primitives/texts/sliding-number';
+import { BRANDS, LEAGUES, LEAGUE_CLUBS, SIZES, SEASONS, KIT_TYPES } from '../constants/referenceData';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const MAX_SLIDER_DAYS = 30;
@@ -88,6 +89,10 @@ export default function AdminApp() {
     price: '',
     team: '',
     size: 'L',
+    brand: '',
+    league: '',
+    season: '',
+    kit_type: '',
     category_slug: 'premier-league',
   });
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -97,6 +102,10 @@ export default function AdminApp() {
     price: '',
     team: '',
     size: '',
+    brand: '',
+    league: '',
+    season: '',
+    kit_type: '',
     category_slug: 'premier-league',
   });
   const [editExistingImages, setEditExistingImages] = useState<string[]>([]);
@@ -180,6 +189,10 @@ export default function AdminApp() {
           ...prev,
           team: '',
           size: '',
+          brand: '',
+          league: '',
+          season: '',
+          kit_type: '',
           category_slug: 'posters',
         };
       }
@@ -270,6 +283,10 @@ export default function AdminApp() {
       price: String(product.price ?? ''),
       team: product.team ?? '',
       size: product.size ?? '',
+      brand: product.brand ?? '',
+      league: product.league ?? '',
+      season: product.season ?? '',
+      kit_type: product.kit_type ?? '',
       category_slug: product.category?.slug ?? 'premier-league',
     });
     setEditExistingImages(normalizedImages);
@@ -560,14 +577,65 @@ export default function AdminApp() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <input className="tg-input" name="price" placeholder="Цена (₽)" value={form.price} onChange={handleChange} required type="number" min="0" />
                   {!isPosterTab && (
-                    <input className="tg-input" name="team" placeholder="Команда" value={form.team} onChange={handleChange} />
+                    <input className="tg-input" name="team" placeholder="Команда (для названия)" value={form.team} onChange={handleChange} />
                   )}
                 </div>
                 {!isPosterTab && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <input className="tg-input" name="size" placeholder="Размер" value={form.size} onChange={handleChange} />
-                    <input className="tg-input" name="category_slug" placeholder="Лига (slug)" value={form.category_slug} onChange={handleChange} />
-                  </div>
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <label className="text-xs font-semibold text-tg-hint space-y-1">
+                        <span className="uppercase tracking-wide text-[11px]">Бренд</span>
+                        <select className="tg-input" name="brand" value={form.brand} onChange={handleChange}>
+                          <option value="">— Выберите —</option>
+                          {BRANDS.map((b) => <option key={b} value={b}>{b}</option>)}
+                        </select>
+                      </label>
+                      <label className="text-xs font-semibold text-tg-hint space-y-1">
+                        <span className="uppercase tracking-wide text-[11px]">Лига</span>
+                        <select className="tg-input" name="league" value={form.league} onChange={(e) => {
+                          handleChange(e);
+                          // Reset team when league changes
+                          setForm((prev) => ({ ...prev, league: e.target.value, team: '' }));
+                        }}>
+                          <option value="">— Выберите —</option>
+                          {LEAGUES.map((l) => <option key={l} value={l}>{l}</option>)}
+                        </select>
+                      </label>
+                    </div>
+                    {form.league && LEAGUE_CLUBS[form.league]?.length > 0 && (
+                      <label className="text-xs font-semibold text-tg-hint space-y-1">
+                        <span className="uppercase tracking-wide text-[11px]">Клуб</span>
+                        <select className="tg-input" name="team" value={form.team} onChange={handleChange}>
+                          <option value="">— Выберите клуб —</option>
+                          {LEAGUE_CLUBS[form.league].map((c) => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                      </label>
+                    )}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <label className="text-xs font-semibold text-tg-hint space-y-1">
+                        <span className="uppercase tracking-wide text-[11px]">Размер</span>
+                        <select className="tg-input" name="size" value={form.size} onChange={handleChange}>
+                          <option value="">— Выберите —</option>
+                          {SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </label>
+                      <label className="text-xs font-semibold text-tg-hint space-y-1">
+                        <span className="uppercase tracking-wide text-[11px]">Сезон</span>
+                        <select className="tg-input" name="season" value={form.season} onChange={handleChange}>
+                          <option value="">— Выберите —</option>
+                          {SEASONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </label>
+                      <label className="text-xs font-semibold text-tg-hint space-y-1">
+                        <span className="uppercase tracking-wide text-[11px]">Тип</span>
+                        <select className="tg-input" name="kit_type" value={form.kit_type} onChange={handleChange}>
+                          <option value="">— Выберите —</option>
+                          {KIT_TYPES.map((k) => <option key={k} value={k}>{k}</option>)}
+                        </select>
+                      </label>
+                    </div>
+                    <input type="hidden" name="category_slug" value={form.category_slug} />
+                  </>
                 )}
                 {isPosterTab && (
                   <input type="hidden" name="category_slug" value="posters" />
@@ -655,7 +723,7 @@ export default function AdminApp() {
                       <p className="text-xs text-tg-hint uppercase">{product.category?.name}</p>
                       <h3 className="font-semibold">{product.name}</h3>
                       <p className="text-sm text-tg-hint">
-                        {[product.team, product.size].filter(Boolean).join(' • ') || 'Без характеристик'}
+                        {[product.team, product.size, product.brand, product.league, product.season, product.kit_type].filter(Boolean).join(' • ') || 'Без характеристик'}
                       </p>
                       <p className="text-xs text-tg-hint mt-1">Нажмите для редактирования</p>
                     </div>
@@ -962,7 +1030,7 @@ export default function AdminApp() {
                     </label>
                     {!isPosterEdit && (
                       <label className="text-xs font-semibold text-tg-hint space-y-1">
-                        <span className="uppercase tracking-wide text-[11px]">Команда</span>
+                        <span className="uppercase tracking-wide text-[11px]">Команда (для названия)</span>
                         <input
                           className="tg-input"
                           name="team"
@@ -974,28 +1042,60 @@ export default function AdminApp() {
                     )}
                   </div>
                   {!isPosterEdit && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <label className="text-xs font-semibold text-tg-hint space-y-1">
-                        <span className="uppercase tracking-wide text-[11px]">Размер</span>
-                        <input
-                          className="tg-input"
-                          name="size"
-                          placeholder="Размер"
-                          value={editForm.size}
-                          onChange={handleEditChange}
-                        />
-                      </label>
-                      <label className="text-xs font-semibold text-tg-hint space-y-1">
-                        <span className="uppercase tracking-wide text-[11px]">Лига (slug)</span>
-                        <input
-                          className="tg-input"
-                          name="category_slug"
-                          placeholder="premier-league"
-                          value={editForm.category_slug}
-                          onChange={handleEditChange}
-                        />
-                      </label>
-                    </div>
+                    <>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <label className="text-xs font-semibold text-tg-hint space-y-1">
+                          <span className="uppercase tracking-wide text-[11px]">Бренд</span>
+                          <select className="tg-input" name="brand" value={editForm.brand} onChange={handleEditChange}>
+                            <option value="">— Выберите —</option>
+                            {BRANDS.map((b) => <option key={b} value={b}>{b}</option>)}
+                          </select>
+                        </label>
+                        <label className="text-xs font-semibold text-tg-hint space-y-1">
+                          <span className="uppercase tracking-wide text-[11px]">Лига</span>
+                          <select className="tg-input" name="league" value={editForm.league} onChange={(e) => {
+                            handleEditChange(e);
+                            setEditForm((prev) => ({ ...prev, league: e.target.value, team: '' }));
+                          }}>
+                            <option value="">— Выберите —</option>
+                            {LEAGUES.map((l) => <option key={l} value={l}>{l}</option>)}
+                          </select>
+                        </label>
+                      </div>
+                      {editForm.league && LEAGUE_CLUBS[editForm.league]?.length > 0 && (
+                        <label className="text-xs font-semibold text-tg-hint space-y-1">
+                          <span className="uppercase tracking-wide text-[11px]">Клуб</span>
+                          <select className="tg-input" name="team" value={editForm.team} onChange={handleEditChange}>
+                            <option value="">— Выберите клуб —</option>
+                            {LEAGUE_CLUBS[editForm.league].map((c) => <option key={c} value={c}>{c}</option>)}
+                          </select>
+                        </label>
+                      )}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <label className="text-xs font-semibold text-tg-hint space-y-1">
+                          <span className="uppercase tracking-wide text-[11px]">Размер</span>
+                          <select className="tg-input" name="size" value={editForm.size} onChange={handleEditChange}>
+                            <option value="">— Выберите —</option>
+                            {SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
+                          </select>
+                        </label>
+                        <label className="text-xs font-semibold text-tg-hint space-y-1">
+                          <span className="uppercase tracking-wide text-[11px]">Сезон</span>
+                          <select className="tg-input" name="season" value={editForm.season} onChange={handleEditChange}>
+                            <option value="">— Выберите —</option>
+                            {SEASONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                          </select>
+                        </label>
+                        <label className="text-xs font-semibold text-tg-hint space-y-1">
+                          <span className="uppercase tracking-wide text-[11px]">Тип</span>
+                          <select className="tg-input" name="kit_type" value={editForm.kit_type} onChange={handleEditChange}>
+                            <option value="">— Выберите —</option>
+                            {KIT_TYPES.map((k) => <option key={k} value={k}>{k}</option>)}
+                          </select>
+                        </label>
+                      </div>
+                      <input type="hidden" name="category_slug" value={editForm.category_slug} />
+                    </>
                   )}
                   {isPosterEdit && (
                     <input type="hidden" name="category_slug" value="posters" />
@@ -1169,7 +1269,7 @@ export default function AdminApp() {
                             </div>
                             <div className="flex-1">
                               <p className="text-sm font-semibold text-tg-text">{item.product_name}</p>
-                              <p className="text-xs text-tg-hint">{product?.team || 'Команда не указана'}</p>
+                              <p className="text-xs text-tg-hint">{[product?.team, product?.brand, product?.league].filter(Boolean).join(' • ') || 'Без характеристик'}</p>
                               <div className="mt-2 flex items-center justify-between text-xs text-tg-hint">
                                 <span>Кол-во: {item.quantity}</span>
                                 <span className="font-semibold text-tg-text">

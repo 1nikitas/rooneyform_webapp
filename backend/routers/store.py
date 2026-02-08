@@ -109,7 +109,9 @@ async def get_products(
         query = query.where(
             or_(
                 Product.name.ilike(f"%{search}%"),
-                Product.team.ilike(f"%{search}%")
+                Product.team.ilike(f"%{search}%"),
+                Product.brand.ilike(f"%{search}%"),
+                Product.league.ilike(f"%{search}%"),
             )
         )
     
@@ -173,6 +175,10 @@ async def create_product(
         price=payload.price,
         team=payload.team,
         size=payload.size,
+        brand=payload.brand,
+        league=payload.league,
+        season=payload.season,
+        kit_type=payload.kit_type,
         image_url=image_url,
         category_id=category.id,
     )

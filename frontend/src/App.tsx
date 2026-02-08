@@ -221,10 +221,19 @@ function App() {
       const orderId = (res.data as { id?: number } | undefined)?.id;
       
       haptics.success();
-      showToast('success', orderId ? `Заказ #${orderId} создан!` : 'Заказ создан!');
+      showToast('success', orderId ? `Заказ #${orderId} создан! Напишите @rooneyform_admin` : 'Заказ создан! Напишите @rooneyform_admin');
       
-      // Optional: close WebApp after successful order
-      // WebApp.close();
+      // Open Telegram chat with admin for order confirmation
+      try {
+        WebApp.openTelegramLink('https://t.me/rooneyform_admin');
+      } catch {
+        // Fallback: try opening link directly
+        try {
+          window.open('https://t.me/rooneyform_admin', '_blank');
+        } catch {
+          // Ignore
+        }
+      }
     } catch (e) {
       console.error(e);
       haptics.error();
