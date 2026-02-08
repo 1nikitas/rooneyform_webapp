@@ -13,7 +13,6 @@ import { Search, ChevronDown, Package } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import WebApp from '@twa-dev/sdk';
 import { formatPrice } from './utils/currency';
-import { useTheme } from './context/ThemeContext';
 import { SlidingNumber } from './components/animate-ui/primitives/texts/sliding-number';
 import haptics from './utils/haptics';
 
@@ -47,7 +46,6 @@ function App() {
   const [direction, setDirection] = useState(0);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const { palette } = useTheme();
   const [catalogFilter, setCatalogFilter] = useState<'jerseys' | 'posters'>('jerseys');
   const [sizeFilter, setSizeFilter] = useState('all');
   const [sortOption, setSortOption] = useState<'default' | 'price-asc' | 'price-desc' | 'name-asc'>('default');
@@ -122,48 +120,14 @@ function App() {
     return () => clearTimeout(delayDebounceFn);
   }, [searchQuery, fetchProducts, catalogCategory]);
 
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // TELEGRAM MAIN BUTTON INTEGRATION
-  // ═══════════════════════════════════════════════════════════════════════════
+  // Hide Telegram MainButton (we use our own checkout button)
   useEffect(() => {
-    const total = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
-    const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
-    
-    if (activeTab === 'cart' && cartCount > 0) {
-      // Show Main Button for checkout
-      try {
-        WebApp.MainButton.setText(`Оформить заказ • ${formatPrice(total)}`);
-        WebApp.MainButton.color = palette.button;
-        WebApp.MainButton.textColor = palette.buttonText;
-        WebApp.MainButton.show();
-        WebApp.MainButton.enable();
-        
-        const handleMainButtonClick = () => {
-          if (!isCheckoutLoading) {
-            handleCheckout();
-          }
-        };
-        
-        WebApp.MainButton.onClick(handleMainButtonClick);
-        
-        return () => {
-          WebApp.MainButton.offClick(handleMainButtonClick);
-          WebApp.MainButton.hide();
-        };
-      } catch (e) {
-        // Fallback for environments without Main Button
-        console.warn('Main Button not available:', e);
-      }
-    } else {
-      // Hide Main Button on other tabs
-      try {
-        WebApp.MainButton.hide();
-      } catch {
-        // Ignore
-      }
+    try {
+      WebApp.MainButton.hide();
+    } catch {
+      // Ignore
     }
-  }, [activeTab, cart, isCheckoutLoading, palette.button, palette.buttonText]);
+  }, [activeTab]);
 
   const handleTabChange = (tab: string) => {
     if (tab === activeTab) return;
@@ -210,12 +174,6 @@ function App() {
     haptics.button();
     
     try {
-      WebApp.MainButton.showProgress(true);
-    } catch {
-      // Ignore
-    }
-    
-    try {
       const res = await apiClient.post('/orders/');
       await fetchCart();
       const orderId = (res.data as { id?: number } | undefined)?.id;
@@ -240,11 +198,6 @@ function App() {
       showToast('error', 'Ошибка оформления. Попробуйте ещё раз.');
     } finally {
       setIsCheckoutLoading(false);
-      try {
-        WebApp.MainButton.hideProgress();
-      } catch {
-        // Ignore
-      }
     }
   };
 
@@ -280,6 +233,15 @@ function App() {
 
   const cartProductIds = useMemo(() => new Set(cart.map(item => item.product.id)), [cart]);
   const pendingCartSet = useMemo(() => new Set(pendingCartIds), [pendingCartIds]);
+
+  const cartTotal = useMemo(
+    () => cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0),
+    [cart],
+  );
+  const cartCount = useMemo(
+    () => cart.reduce((acc, item) => acc + item.quantity, 0),
+    [cart],
+  );
 
   const sortLabels: Record<string, string> = {
     'default': 'По умолчанию',
@@ -440,11 +402,9 @@ function App() {
         ) : (
           <div className="grid grid-cols-2 gap-3">
             {filteredProducts.map((product, idx) => (
-              <motion.div
+              <div
                 key={product.id}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.03, duration: 0.25 }}
+                className={idx < 4 ? '' : 'animate-fade-in'}
               >
                 <ProductCard
                   product={product}
@@ -461,7 +421,7 @@ function App() {
                   inCart={cartProductIds.has(product.id) || pendingCartSet.has(product.id)}
                   enableSharedLayout={false}
                 />
-              </motion.div>
+              </div>
             ))}
           </div>
         )}
@@ -473,11 +433,8 @@ function App() {
   // CART TAB
   // ═══════════════════════════════════════════════════════════════════════════
   const renderCart = () => {
-    const total = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
-    const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
-
     return (
-      <div className="space-y-5">
+      <div className="space-y-5 pb-20">
         {/* Header */}
         <div className="flex items-end justify-between">
           <div>
@@ -488,7 +445,7 @@ function App() {
           </div>
           {cart.length > 0 && (
             <div className="surface-soft px-4 py-2 rounded-xl text-sm font-semibold text-tg-text">
-              {formatPrice(total)}
+              {formatPrice(cartTotal)}
             </div>
           )}
         </div>
@@ -530,11 +487,11 @@ function App() {
               </AnimatePresence>
             </div>
 
-            {/* Summary */}
+            {/* Summary (totals only, no button here) */}
             <div className="surface-card rounded-2xl p-5 space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-tg-hint">Товары</span>
-                <span className="text-sm text-tg-text">{formatPrice(total)}</span>
+                <span className="text-sm text-tg-text">{formatPrice(cartTotal)}</span>
               </div>
               
               <div className="h-px bg-current opacity-[0.06]" />
@@ -542,27 +499,10 @@ function App() {
               <div className="flex justify-between items-center">
                 <span className="text-base font-semibold text-tg-text">Итого</span>
                 <span className="text-xl font-bold text-tg-text inline-flex items-baseline gap-1">
-                  <SlidingNumber number={total} thousandSeparator=" " decimalPlaces={0} />
+                  <SlidingNumber number={cartTotal} thousandSeparator=" " decimalPlaces={0} />
                   <span className="text-sm font-semibold">₽</span>
                 </span>
               </div>
-              
-              {/* Fallback button (Main Button is primary) */}
-              <motion.button
-                onClick={handleCheckout}
-                disabled={isCheckoutLoading}
-                className={`
-                  btn-primary w-full
-                  ${isCheckoutLoading ? 'opacity-70 cursor-wait' : ''}
-                `}
-                whileTap={isCheckoutLoading ? undefined : { scale: 0.98 }}
-              >
-                {isCheckoutLoading ? 'Оформляем...' : 'Оформить заказ'}
-              </motion.button>
-              
-              <p className="text-xs text-tg-hint text-center">
-                Или используйте кнопку внизу экрана
-              </p>
             </div>
           </>
         )}
@@ -596,11 +536,9 @@ function App() {
       ) : (
         <div className="grid grid-cols-2 gap-3">
           {favorites.map((fav, idx) => (
-            <motion.div
+            <div
               key={fav.product.id}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.03 }}
+              className={idx < 4 ? '' : 'animate-fade-in'}
             >
               <ProductCard
                 product={fav.product}
@@ -617,7 +555,7 @@ function App() {
                 inCart={cartProductIds.has(fav.product.id) || pendingCartSet.has(fav.product.id)}
                 enableSharedLayout={false}
               />
-            </motion.div>
+            </div>
           ))}
         </div>
       )}
@@ -652,6 +590,35 @@ function App() {
           </motion.div>
         </AnimatePresence>
       </div>
+
+      {/* Fixed checkout bar - above navbar, only on cart tab with items */}
+      <AnimatePresence>
+        {activeTab === 'cart' && cartCount > 0 && (
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 20, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            className="fixed left-0 right-0 z-40 px-4"
+            style={{ bottom: 'calc(var(--safe-area-bottom-effective) + 80px)' }}
+          >
+            <div className="w-full max-w-[430px] mx-auto">
+              <motion.button
+                onClick={handleCheckout}
+                disabled={isCheckoutLoading}
+                className={`
+                  btn-primary w-full py-4 rounded-2xl font-semibold text-[15px]
+                  shadow-[0_8px_32px_rgba(0,0,0,0.25)]
+                  ${isCheckoutLoading ? 'opacity-70 cursor-wait' : ''}
+                `}
+                whileTap={isCheckoutLoading ? undefined : { scale: 0.98 }}
+              >
+                {isCheckoutLoading ? 'Оформляем...' : `Оформить заказ • ${formatPrice(cartTotal)}`}
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <BottomNav currentTab={activeTab} onTabChange={handleTabChange} />
 

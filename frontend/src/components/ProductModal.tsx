@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Product } from '../types';
-import { X, Heart, ShoppingCart } from 'lucide-react';
+import { X, Heart, ShoppingCart, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import type { Swiper as SwiperType } from 'swiper/types';
@@ -34,12 +34,14 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
         }
     }, [product]);
 
+    const closeFullscreen = useCallback(() => setIsFullscreen(false), []);
+
     // Telegram back button handling
     useEffect(() => {
         if (!product) return;
         const handleBack = () => {
             if (isFullscreen) {
-                setIsFullscreen(false);
+                closeFullscreen();
             } else {
                 onClose();
             }
@@ -58,7 +60,17 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                 // Ignore
             }
         };
-    }, [product, isFullscreen, onClose]);
+    }, [product, isFullscreen, onClose, closeFullscreen]);
+
+    // Close fullscreen on Escape key
+    useEffect(() => {
+        if (!isFullscreen) return;
+        const handleKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') closeFullscreen();
+        };
+        window.addEventListener('keydown', handleKey);
+        return () => window.removeEventListener('keydown', handleKey);
+    }, [isFullscreen, closeFullscreen]);
 
     if (!product) return null;
 
@@ -66,7 +78,13 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
     const images = product.gallery?.length ? product.gallery : [product.image_url];
     const inCart = cart.some(item => item.product.id === product.id) || pendingCartIds.includes(product.id);
     const hasMultipleImages = images.length > 1;
-    const closeFullscreen = () => setIsFullscreen(false);
+
+    const goFullscreenPrev = () => {
+        setActiveIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
+    };
+    const goFullscreenNext = () => {
+        setActiveIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
+    };
 
     return (
         <AnimatePresence>
@@ -290,70 +308,85 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                         </div>
                     </motion.div>
 
-                    {/* Fullscreen Gallery */}
-                    <AnimatePresence>
-                        {isFullscreen && (
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                drag="y"
-                                dragConstraints={{ top: -40, bottom: 180 }}
-                                dragElastic={0.2}
-                                onDragEnd={(_, info) => {
-                                    if (info.offset.y > 120 || info.velocity.y > 1000) {
-                                        closeFullscreen();
-                                    }
-                                }}
-                                className="fixed inset-0 z-[80] flex flex-col bg-[var(--tg-gallery-bg)] text-white"
-                                style={{
-                                    paddingTop: 'calc(var(--safe-area-top-effective) + 10px)',
-                                    paddingBottom: 'calc(var(--safe-area-bottom-effective) + 12px)',
-                                }}
-                            >
-                                {/* Header */}
-                                <div className="pb-2">
-                                    <div className="flex justify-center pb-2">
-                                        <span className="h-1 w-10 rounded-full bg-white/20" />
-                                    </div>
-                                    <div className="grid grid-cols-[auto,1fr,auto] items-center px-4">
-                                        <button
-                                            onClick={closeFullscreen}
-                                            className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center tap-target backdrop-blur-lg border border-white/15 shadow-[0_10px_30px_rgba(0,0,0,0.4)]"
-                                            aria-label="Закрыть"
-                                        >
-                                            <X size={18} />
-                                        </button>
-                                        <span className="text-[11px] uppercase tracking-[0.35em] text-white/70 justify-self-center">
-                                            {activeIndex + 1} / {images.length}
-                                        </span>
-                                        <div className="w-10" />
-                                    </div>
-                                </div>
-
-                                {/* Image */}
-                                <Swiper
-                                    initialSlide={activeIndex}
-                                    onSlideChange={(swiper) => setActiveIndex(swiper.activeIndex)}
-                                    className="flex-1 w-full"
+                    {/* Simple Fullscreen Gallery - fixed overlay, no drag */}
+                    {isFullscreen && (
+                        <div
+                            className="fixed inset-0 z-[80] bg-black flex flex-col"
+                            style={{
+                                paddingTop: 'env(safe-area-inset-top, 0px)',
+                                paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+                            }}
+                        >
+                            {/* Header */}
+                            <div className="flex-shrink-0 flex items-center justify-between px-4 py-3">
+                                <button
+                                    onClick={closeFullscreen}
+                                    className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center tap-target"
+                                    aria-label="Закрыть"
                                 >
-                                    {images.map((image) => (
-                                        <SwiperSlide key={`${image}-fullscreen`}>
-                                            <div className="h-full w-full flex items-center justify-center px-3">
-                                                <img
-                                                    src={resolveAssetUrl(image)}
-                                                    alt={product.name}
-                                                    loading="lazy"
-                                                    decoding="async"
-                                                    className="max-h-[calc(var(--tg-viewport-height)-96px)] max-w-[92vw] object-contain drop-shadow-2xl"
-                                                />
-                                            </div>
-                                        </SwiperSlide>
+                                    <X size={18} />
+                                </button>
+                                {hasMultipleImages && (
+                                    <span className="text-[12px] uppercase tracking-[0.25em] text-white/60 font-medium">
+                                        {activeIndex + 1} / {images.length}
+                                    </span>
+                                )}
+                                <div className="w-10" />
+                            </div>
+
+                            {/* Image area */}
+                            <div className="flex-1 flex items-center justify-center relative min-h-0">
+                                {/* Navigation arrows */}
+                                {hasMultipleImages && (
+                                    <>
+                                        <button
+                                            onClick={goFullscreenPrev}
+                                            className="absolute left-2 z-10 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center tap-target"
+                                            aria-label="Предыдущее фото"
+                                        >
+                                            <ChevronLeft size={20} />
+                                        </button>
+                                        <button
+                                            onClick={goFullscreenNext}
+                                            className="absolute right-2 z-10 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center tap-target"
+                                            aria-label="Следующее фото"
+                                        >
+                                            <ChevronRight size={20} />
+                                        </button>
+                                    </>
+                                )}
+
+                                {/* Current image */}
+                                <img
+                                    src={resolveAssetUrl(images[activeIndex])}
+                                    alt={`${product.name} ${activeIndex + 1}`}
+                                    className="max-h-full max-w-full object-contain px-4"
+                                    onClick={closeFullscreen}
+                                    draggable={false}
+                                />
+                            </div>
+
+                            {/* Thumbnail dots */}
+                            {hasMultipleImages && (
+                                <div className="flex-shrink-0 flex justify-center gap-2 py-4">
+                                    {images.map((_, idx) => (
+                                        <button
+                                            key={idx}
+                                            onClick={() => setActiveIndex(idx)}
+                                            className={`
+                                                rounded-full transition-all duration-200
+                                                ${activeIndex === idx 
+                                                    ? 'w-7 h-2 bg-white' 
+                                                    : 'w-2 h-2 bg-white/30'
+                                                }
+                                            `}
+                                            aria-label={`Фото ${idx + 1}`}
+                                        />
                                     ))}
-                                </Swiper>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </>
             )}
         </AnimatePresence>

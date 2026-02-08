@@ -5,6 +5,7 @@ import { Check, Plus } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { formatPrice } from '../utils/currency';
 import { resolveAssetUrl } from '../utils/assets';
+import { OptimizedImage } from './OptimizedImage';
 
 interface ProductCardProps {
     product: Product;
@@ -38,13 +39,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         >
             {/* Image Container - more rectangular aspect ratio (3:4) */}
             <div className="relative aspect-[3/4] overflow-hidden bg-[var(--tg-surface-2)]">
-                <motion.img
-                    layoutId={shouldAnimate ? `image-${product.id}` : undefined}
+                <OptimizedImage
                     src={resolveAssetUrl(coverImage)}
                     alt={product.name}
                     className="w-full h-full object-cover"
                     loading="lazy"
-                    decoding="async"
                 />
                 
                 {/* Subtle gradient only at the very bottom */}
