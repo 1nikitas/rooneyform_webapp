@@ -21,27 +21,27 @@ export const Layout: React.FC<LayoutProps> = ({ children, containerClassName }) 
 
     useEffect(() => {
         const root = document.documentElement;
-        const MAIN_BUTTON_FALLBACK = 58;
-
-        const computeBottomInset = () => {
-            const { viewportHeight = window.innerHeight, viewportStableHeight, safeAreaInset } = WebApp;
-            const inferredInset = viewportStableHeight
-                ? Math.max(0, viewportHeight - viewportStableHeight)
-                : 0;
-            return safeAreaInset?.bottom ?? inferredInset;
-        };
 
         const updateInsets = () => {
             try {
-                const top = WebApp.safeAreaInset?.top ?? 0;
-                const bottom = computeBottomInset();
-                const mainButtonHeight = WebApp.MainButton?.isVisible
-                    ? MAIN_BUTTON_FALLBACK
-                    : 0;
+                // Telegram WebApp provides two safe area objects:
+                // safeAreaInset — device safe area (notch, home indicator)
+                // contentSafeAreaInset — Telegram header area (iOS overlay)
+                const sa = (WebApp as any).safeAreaInset ?? {};
+                const csa = (WebApp as any).contentSafeAreaInset ?? {};
 
-                root.style.setProperty('--safe-area-top-runtime', `${top}px`);
-                root.style.setProperty('--safe-area-bottom-runtime', `${bottom}px`);
-                root.style.setProperty('--tg-main-button-height-runtime', `${mainButtonHeight}px`);
+                // Top: combine device safe area + Telegram content inset (header)
+                const topDevice = sa.top ?? 0;
+                const topContent = csa.top ?? 0;
+                const topTotal = topDevice + topContent;
+
+                // Bottom: device safe area (home indicator)
+                const bottomDevice = sa.bottom ?? 0;
+
+                root.style.setProperty('--safe-area-top-runtime', `${topTotal}px`);
+                root.style.setProperty('--safe-area-bottom-runtime', `${bottomDevice}px`);
+                root.style.setProperty('--tg-main-button-height-runtime', '0px');
+
                 if (WebApp.viewportHeight) {
                     root.style.setProperty('--tg-viewport-height', `${WebApp.viewportHeight}px`);
                 }
@@ -52,10 +52,19 @@ export const Layout: React.FC<LayoutProps> = ({ children, containerClassName }) 
 
         updateInsets();
         WebApp.onEvent?.('viewportChanged', updateInsets);
-        const interval = window.setInterval(updateInsets, 750);
+        // Also listen for safe area changes if the API supports it
+        try {
+            (WebApp as any).onEvent?.('safeAreaChanged', updateInsets);
+            (WebApp as any).onEvent?.('contentSafeAreaChanged', updateInsets);
+        } catch { /* ignore */ }
+        const interval = window.setInterval(updateInsets, 1000);
 
         return () => {
             WebApp.offEvent?.('viewportChanged', updateInsets);
+            try {
+                (WebApp as any).offEvent?.('safeAreaChanged', updateInsets);
+                (WebApp as any).offEvent?.('contentSafeAreaChanged', updateInsets);
+            } catch { /* ignore */ }
             window.clearInterval(interval);
         };
     }, []);

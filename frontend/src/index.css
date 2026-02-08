@@ -234,14 +234,14 @@ body {
 /* Main container with proper safe areas */
 .tg-safe-container {
   padding-top: calc(var(--safe-area-top-effective) + var(--space-4));
-  padding-bottom: calc(var(--tg-bottom-safe-spacing) + var(--tg-bottom-nav-height));
+  padding-bottom: calc(var(--safe-area-bottom-effective) + 60px + 32px);
   min-height: 100dvh;
   min-height: -webkit-fill-available;
 }
 
-/* Bottom navigation positioning - flush to bottom */
+/* Bottom navigation positioning - floating pill with offset from bottom */
 .tg-safe-nav {
-  bottom: var(--safe-area-bottom-effective);
+  bottom: calc(var(--safe-area-bottom-effective) + 10px);
 }
 
 /* Modal sheet positioning */

@@ -20,14 +20,14 @@ const NavItem: React.FC<NavItemProps> = ({ icon, label, isActive, badge, onClick
     return (
         <button
             onClick={onClick}
-            className="relative flex flex-col items-center justify-center min-w-[64px] min-h-[56px] tap-target transition-colors"
+            className="relative flex flex-col items-center justify-center min-w-[64px] min-h-[52px] tap-target transition-colors"
             aria-label={label}
         >
             {/* Active indicator */}
             {isActive && (
                 <motion.div
                     layoutId="nav-indicator"
-                    className="absolute inset-x-2 -top-1 h-0.5 rounded-full"
+                    className="absolute inset-x-3 -top-0.5 h-0.5 rounded-full"
                     style={{ backgroundColor: 'var(--tg-theme-text-color)' }}
                     transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                 />
@@ -48,12 +48,12 @@ const NavItem: React.FC<NavItemProps> = ({ icon, label, isActive, badge, onClick
                     {icon}
                 </div>
                 
-                {/* Badge */}
+                {/* Badge - positioned to right-top of icon, not overlapping */}
                 {badge !== undefined && badge > 0 && (
                     <motion.span
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
-                        className="absolute -top-1.5 -right-2 min-w-[18px] h-[18px] px-1 badge-contrast text-[10px] font-semibold rounded-full flex items-center justify-center shadow-sm"
+                        className="absolute -top-1 left-full -ml-1.5 min-w-[16px] h-[16px] px-1 badge-contrast text-[9px] font-bold rounded-full flex items-center justify-center"
                     >
                         {badge > 99 ? '99+' : badge}
                     </motion.span>
@@ -61,7 +61,7 @@ const NavItem: React.FC<NavItemProps> = ({ icon, label, isActive, badge, onClick
             </motion.div>
             
             {/* Label */}
-            <span className={`text-[10px] font-medium mt-1 transition-colors duration-200 ${
+            <span className={`text-[10px] font-medium mt-0.5 transition-colors duration-200 ${
                 isActive ? 'text-tg-text' : 'text-tg-hint'
             }`}>
                 {label}
@@ -97,11 +97,12 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onTabChange })
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30, delay: 0.1 }}
-            className={`fixed tg-safe-nav left-0 right-0 z-50 
-                h-[68px] 
-                glass border-t border-[var(--tg-border-subtle)]
+            className="fixed tg-safe-nav left-0 right-0 mx-auto z-50 
+                w-[min(320px,calc(100%-40px))] h-[60px] 
+                glass rounded-2xl border border-[var(--tg-border-subtle)]
                 flex justify-around items-center px-2
-            `}
+                shadow-lg
+            "
         >
             {navItems.map((item) => (
                 <NavItem

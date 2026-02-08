@@ -49,7 +49,7 @@ const ToastContainer: React.FC = () => {
   const { toasts } = useToast();
 
   return (
-    <div className="fixed top-4 inset-x-4 z-[100] flex flex-col items-center gap-2 pointer-events-none">
+    <div className="fixed inset-x-4 z-[100] flex flex-col items-center gap-2 pointer-events-none" style={{ top: 'calc(var(--safe-area-top-effective) + 8px)' }}>
       <AnimatePresence mode="sync">
         {toasts.map((toast) => (
           <ToastItem key={toast.id} toast={toast} />

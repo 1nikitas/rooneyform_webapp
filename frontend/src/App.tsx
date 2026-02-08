@@ -9,12 +9,13 @@ import { useToast } from './components/Toast';
 import { useStore } from './store/useStore';
 import type { Product } from './types';
 import apiClient from './api/client';
-import { Search, ChevronDown, Package } from 'lucide-react';
+import { Search, ChevronDown, Package, SlidersHorizontal, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import WebApp from '@twa-dev/sdk';
 import { formatPrice } from './utils/currency';
 import { SlidingNumber } from './components/animate-ui/primitives/texts/sliding-number';
 import haptics from './utils/haptics';
+import { BRANDS, LEAGUES, LEAGUE_CLUBS, SEASONS, KIT_TYPES } from './constants/referenceData';
 
 const TAB_ORDER = ['home', 'cart', 'favorites'] as const;
 const PRODUCT_LIMIT = 300;
@@ -48,6 +49,12 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [catalogFilter, setCatalogFilter] = useState<'jerseys' | 'posters'>('jerseys');
   const [sizeFilter, setSizeFilter] = useState('all');
+  const [brandFilter, setBrandFilter] = useState('all');
+  const [leagueFilter, setLeagueFilter] = useState('all');
+  const [clubFilter, setClubFilter] = useState('all');
+  const [seasonFilter, setSeasonFilter] = useState('all');
+  const [kitTypeFilter, setKitTypeFilter] = useState('all');
+  const [showFilters, setShowFilters] = useState(false);
   const [sortOption, setSortOption] = useState<'default' | 'price-asc' | 'price-desc' | 'name-asc'>('default');
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const { showToast } = useToast();
@@ -154,19 +161,53 @@ function App() {
     });
   }, [products]);
 
+  // Count active filters (excluding size which is always visible)
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (brandFilter !== 'all') count++;
+    if (leagueFilter !== 'all') count++;
+    if (clubFilter !== 'all') count++;
+    if (seasonFilter !== 'all') count++;
+    if (kitTypeFilter !== 'all') count++;
+    return count;
+  }, [brandFilter, leagueFilter, clubFilter, seasonFilter, kitTypeFilter]);
+
+  // Available clubs based on selected league
+  const availableClubs = useMemo(() => {
+    if (leagueFilter === 'all') return [];
+    return LEAGUE_CLUBS[leagueFilter] ?? [];
+  }, [leagueFilter]);
+
   const filteredProducts = useMemo(() => {
     let list = [...products];
     if (catalogFilter === 'jerseys') {
       list = list.filter((p) => p.category?.slug !== 'posters');
     }
-    if (catalogFilter === 'jerseys' && sizeFilter !== 'all') {
-      list = list.filter((p) => p.size?.trim().toUpperCase() === sizeFilter);
+    if (catalogFilter === 'jerseys') {
+      if (sizeFilter !== 'all') {
+        list = list.filter((p) => p.size?.trim().toUpperCase() === sizeFilter);
+      }
+      if (brandFilter !== 'all') {
+        list = list.filter((p) => p.brand === brandFilter);
+      }
+      if (leagueFilter !== 'all') {
+        list = list.filter((p) => p.league === leagueFilter);
+      }
+      if (clubFilter !== 'all') {
+        list = list.filter((p) => p.team === clubFilter);
+      }
+      if (seasonFilter !== 'all') {
+        list = list.filter((p) => p.season === seasonFilter);
+      }
+      if (kitTypeFilter !== 'all') {
+        list = list.filter((p) => p.kit_type === kitTypeFilter);
+      }
     }
     if (sortOption === 'price-asc') list.sort((a, b) => a.price - b.price);
     else if (sortOption === 'price-desc') list.sort((a, b) => b.price - a.price);
     else if (sortOption === 'name-asc') list.sort((a, b) => a.name.localeCompare(b.name));
     return list;
-  }, [products, sizeFilter, sortOption, catalogFilter]);
+  }, [products, sizeFilter, brandFilter, leagueFilter, clubFilter, seasonFilter, kitTypeFilter, sortOption, catalogFilter]);
 
   const handleCheckout = async () => {
     if (isCheckoutLoading || cart.length === 0) return;
@@ -302,89 +343,263 @@ function App() {
 
         {/* Filters - only for jerseys */}
         {catalogFilter === 'jerseys' && (
-          <div className="surface-muted rounded-2xl p-4 space-y-4">
-            {/* Size filters */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-medium uppercase tracking-wide text-tg-hint">
-                  Размер
-                </span>
-                <span className="text-xs text-tg-hint">
-                  {filteredProducts.length} шт.
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => {
-                    haptics.tap();
-                    setSizeFilter('all');
-                  }}
-                  className={`chip ${sizeFilter === 'all' ? 'chip-active' : 'chip-default'}`}
-                >
-                  Все
-                </button>
-                {sizeOptions.map((size) => (
+          <div className="space-y-3">
+            {/* Size chips + filter toggle + sort - always visible */}
+            <div className="surface-muted rounded-2xl p-4 space-y-3">
+              {/* Size row */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium uppercase tracking-wide text-tg-hint">
+                    Размер
+                  </span>
+                  <span className="text-xs text-tg-hint">
+                    {filteredProducts.length} шт.
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
                   <button
-                    key={size}
-                    onClick={() => {
-                      haptics.tap();
-                      setSizeFilter(size);
-                    }}
-                    className={`chip ${sizeFilter === size ? 'chip-active' : 'chip-default'}`}
+                    onClick={() => { haptics.tap(); setSizeFilter('all'); }}
+                    className={`chip ${sizeFilter === 'all' ? 'chip-active' : 'chip-default'}`}
                   >
-                    {size}
+                    Все
                   </button>
-                ))}
+                  {sizeOptions.map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => { haptics.tap(); setSizeFilter(size); }}
+                      className={`chip ${sizeFilter === size ? 'chip-active' : 'chip-default'}`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Filter toggle + Sort in a row */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { haptics.tap(); setShowFilters(!showFilters); }}
+                  className={`flex-1 h-11 px-4 rounded-xl flex items-center justify-center gap-2 text-sm font-medium transition-colors duration-200 ${
+                    showFilters || activeFilterCount > 0
+                      ? 'surface-card text-tg-text'
+                      : 'surface-card text-tg-hint'
+                  }`}
+                >
+                  <SlidersHorizontal size={16} />
+                  <span>Фильтры</span>
+                  {activeFilterCount > 0 && (
+                    <span className="min-w-[20px] h-[20px] px-1 badge-contrast text-[10px] font-bold rounded-full flex items-center justify-center">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </button>
+
+                <div className="relative flex-1">
+                  <button
+                    onClick={() => { haptics.tap(); setShowSortDropdown(!showSortDropdown); }}
+                    className="w-full h-11 px-4 rounded-xl flex items-center justify-between text-sm font-medium transition-colors duration-200 surface-card"
+                  >
+                    <span className="truncate text-tg-hint">{sortLabels[sortOption]}</span>
+                    <ChevronDown size={16} className={`transition-transform flex-shrink-0 ml-1 ${showSortDropdown ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  <AnimatePresence>
+                    {showSortDropdown && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute top-full left-0 right-0 mt-2 z-20 rounded-xl overflow-hidden surface-card shadow-lg"
+                      >
+                        {Object.entries(sortLabels).map(([key, label]) => (
+                          <button
+                            key={key}
+                            onClick={() => {
+                              haptics.tap();
+                              setSortOption(key as typeof sortOption);
+                              setShowSortDropdown(false);
+                            }}
+                            className={`
+                              w-full px-4 py-3 text-left text-sm transition-colors duration-150
+                              ${sortOption === key ? 'text-tg-text font-semibold' : 'text-tg-text'}
+                              hover:bg-black/5 dark:hover:bg-white/5
+                            `}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             </div>
-            
-            {/* Sort dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => {
-                  haptics.tap();
-                  setShowSortDropdown(!showSortDropdown);
-                }}
-                className="w-full h-12 px-4 rounded-xl flex items-center justify-between text-sm font-medium transition-colors duration-200 surface-card"
-              >
-                <span>{sortLabels[sortOption]}</span>
-                <ChevronDown size={18} className={`transition-transform ${showSortDropdown ? 'rotate-180' : ''}`} />
-              </button>
-              
-              <AnimatePresence>
-                {showSortDropdown && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8, scale: 0.96 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute top-full left-0 right-0 mt-2 z-20 rounded-xl overflow-hidden surface-card"
-                  >
-                    {Object.entries(sortLabels).map(([key, label]) => (
-                      <button
-                        key={key}
-                        onClick={() => {
-                          haptics.tap();
-                          setSortOption(key as typeof sortOption);
-                          setShowSortDropdown(false);
-                        }}
-                        className={`
-                          w-full px-4 py-3 text-left text-sm
-                          transition-colors duration-150
-                          ${sortOption === key 
-                            ? 'text-tg-text font-semibold' 
-                            : 'text-tg-text'
-                          }
-                          hover:bg-black/5 dark:hover:bg-white/5
-                        `}
+
+            {/* Extended filters panel */}
+            <AnimatePresence>
+              {showFilters && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2, ease: 'easeInOut' }}
+                  className="overflow-hidden"
+                >
+                  <div className="surface-muted rounded-2xl p-4 space-y-4">
+                    {/* Active filters summary + reset */}
+                    {activeFilterCount > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-tg-hint">
+                          Активных фильтров: {activeFilterCount}
+                        </span>
+                        <button
+                          onClick={() => {
+                            haptics.tap();
+                            setBrandFilter('all');
+                            setLeagueFilter('all');
+                            setClubFilter('all');
+                            setSeasonFilter('all');
+                            setKitTypeFilter('all');
+                          }}
+                          className="text-xs font-medium text-tg-text flex items-center gap-1"
+                        >
+                          <X size={12} />
+                          Сбросить
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Brand */}
+                    <div>
+                      <span className="text-xs font-medium uppercase tracking-wide text-tg-hint block mb-2">
+                        Бренд
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        <button
+                          onClick={() => { haptics.tap(); setBrandFilter('all'); }}
+                          className={`chip ${brandFilter === 'all' ? 'chip-active' : 'chip-default'}`}
+                        >
+                          Все
+                        </button>
+                        {BRANDS.map((b) => (
+                          <button
+                            key={b}
+                            onClick={() => { haptics.tap(); setBrandFilter(b); }}
+                            className={`chip ${brandFilter === b ? 'chip-active' : 'chip-default'}`}
+                          >
+                            {b}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* League */}
+                    <div>
+                      <span className="text-xs font-medium uppercase tracking-wide text-tg-hint block mb-2">
+                        Лига
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        <button
+                          onClick={() => { haptics.tap(); setLeagueFilter('all'); setClubFilter('all'); }}
+                          className={`chip ${leagueFilter === 'all' ? 'chip-active' : 'chip-default'}`}
+                        >
+                          Все
+                        </button>
+                        {LEAGUES.map((l) => (
+                          <button
+                            key={l}
+                            onClick={() => { haptics.tap(); setLeagueFilter(l); setClubFilter('all'); }}
+                            className={`chip ${leagueFilter === l ? 'chip-active' : 'chip-default'}`}
+                          >
+                            {l}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Club - only when a league is selected */}
+                    {leagueFilter !== 'all' && availableClubs.length > 0 && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.15 }}
                       >
-                        {label}
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                        <span className="text-xs font-medium uppercase tracking-wide text-tg-hint block mb-2">
+                          Клуб
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          <button
+                            onClick={() => { haptics.tap(); setClubFilter('all'); }}
+                            className={`chip ${clubFilter === 'all' ? 'chip-active' : 'chip-default'}`}
+                          >
+                            Все
+                          </button>
+                          {availableClubs.map((c) => (
+                            <button
+                              key={c}
+                              onClick={() => { haptics.tap(); setClubFilter(c); }}
+                              className={`chip ${clubFilter === c ? 'chip-active' : 'chip-default'}`}
+                            >
+                              {c}
+                            </button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Season */}
+                    <div>
+                      <span className="text-xs font-medium uppercase tracking-wide text-tg-hint block mb-2">
+                        Сезон
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        <button
+                          onClick={() => { haptics.tap(); setSeasonFilter('all'); }}
+                          className={`chip ${seasonFilter === 'all' ? 'chip-active' : 'chip-default'}`}
+                        >
+                          Все
+                        </button>
+                        {SEASONS.map((s) => (
+                          <button
+                            key={s}
+                            onClick={() => { haptics.tap(); setSeasonFilter(s); }}
+                            className={`chip ${seasonFilter === s ? 'chip-active' : 'chip-default'}`}
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Kit type */}
+                    <div>
+                      <span className="text-xs font-medium uppercase tracking-wide text-tg-hint block mb-2">
+                        Тип формы
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        <button
+                          onClick={() => { haptics.tap(); setKitTypeFilter('all'); }}
+                          className={`chip ${kitTypeFilter === 'all' ? 'chip-active' : 'chip-default'}`}
+                        >
+                          Все
+                        </button>
+                        {KIT_TYPES.map((k) => (
+                          <button
+                            key={k}
+                            onClick={() => { haptics.tap(); setKitTypeFilter(k); }}
+                            className={`chip ${kitTypeFilter === k ? 'chip-active' : 'chip-default'}`}
+                          >
+                            {k}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         )}
 
@@ -600,7 +815,7 @@ function App() {
             exit={{ y: 20, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
             className="fixed left-0 right-0 z-40 px-4"
-            style={{ bottom: 'calc(var(--safe-area-bottom-effective) + 80px)' }}
+            style={{ bottom: 'calc(var(--safe-area-bottom-effective) + 82px)' }}
           >
             <div className="w-full max-w-[430px] mx-auto">
               <motion.button
