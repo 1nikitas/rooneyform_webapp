@@ -13,6 +13,8 @@ interface ProductCardProps {
     onAdd: (e: React.MouseEvent) => void;
     inCart?: boolean;
     enableSharedLayout?: boolean;
+    imageLoading?: 'lazy' | 'eager';
+    imageFetchPriority?: 'high' | 'low' | 'auto';
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -21,6 +23,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     onAdd,
     inCart = false,
     enableSharedLayout = true,
+    imageLoading = 'lazy',
+    imageFetchPriority = 'auto',
 }) => {
     const coverImage = product.gallery?.[0] || product.image_url;
     const { isDark } = useTheme();
@@ -43,7 +47,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                     src={resolveAssetUrl(coverImage)}
                     alt={product.name}
                     className="w-full h-full object-cover"
-                    loading="lazy"
+                    loading={imageLoading}
+                    fetchPriority={imageFetchPriority}
                 />
                 
                 {/* Subtle gradient only at the very bottom */}

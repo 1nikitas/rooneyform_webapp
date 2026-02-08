@@ -297,7 +297,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                             }}
                         >
                             {/* Image area */}
-                            <div className="flex-1 flex items-center justify-center relative min-h-0">
+                            <div className="flex-1 flex items-center justify-center relative min-h-0 px-4">
                                 {/* Navigation arrows */}
                                 {hasMultipleImages && (
                                     <>
@@ -331,12 +331,14 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                                                 className="h-full w-full flex items-center justify-center focus:outline-none"
                                                 onClick={closeFullscreen}
                                             >
-                                                <img
-                                                    src={resolveAssetUrl(image)}
-                                                    alt={`${product.name} ${idx + 1}`}
-                                                    className="max-h-full max-w-full object-contain px-4"
-                                                    draggable={false}
-                                                />
+                                                <div className="h-full w-full overflow-hidden rounded-3xl bg-black/20">
+                                                    <img
+                                                        src={resolveAssetUrl(image)}
+                                                        alt={`${product.name} ${idx + 1}`}
+                                                        className="h-full w-full object-cover"
+                                                        draggable={false}
+                                                    />
+                                                </div>
                                             </button>
                                         </SwiperSlide>
                                     ))}

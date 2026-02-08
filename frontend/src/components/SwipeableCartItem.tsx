@@ -24,16 +24,13 @@ export const SwipeableCartItem: React.FC<SwipeableCartItemProps> = ({ item, onRe
   const deleteScale = useTransform(x, [DELETE_THRESHOLD, DELETE_THRESHOLD / 2], [1, 0.8]);
   const contentOpacity = useTransform(x, [MAX_SWIPE, DELETE_THRESHOLD], [0.5, 1]);
 
-  const handleDragEnd = async (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+  const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     void info;
     const currentX = x.get();
     
     if (currentX <= DELETE_THRESHOLD) {
       setIsDeleting(true);
       haptics.success();
-      
-      // Animate out
-      await animate(x, -400, { duration: 0.2 });
       onRemove();
     } else {
       // Snap back

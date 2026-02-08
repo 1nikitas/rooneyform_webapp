@@ -69,11 +69,14 @@ export const useStore = create<AppState>((set, get) => ({
     },
 
     removeFromCart: async (item_id) => {
+        const prevCart = get().cart;
+        set({ cart: prevCart.filter((item) => item.id !== item_id) });
         try {
              await apiClient.delete(`/cart/${item_id}`);
              get().fetchCart();
         } catch (error) {
              console.error(error);
+             set({ cart: prevCart });
         }
     },
 

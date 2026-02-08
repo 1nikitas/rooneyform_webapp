@@ -19,6 +19,8 @@ import { BRANDS, LEAGUES, LEAGUE_CLUBS, SEASONS, KIT_TYPES } from './constants/r
 
 const TAB_ORDER = ['home', 'cart', 'favorites'] as const;
 const PRODUCT_LIMIT = 300;
+const INITIAL_RENDER_COUNT = 24;
+const RENDER_CHUNK = 24;
 
 import { ProductModal } from './components/ProductModal';
 
@@ -55,6 +57,7 @@ function App() {
   const [showFilters, setShowFilters] = useState(false);
   const [sortOption, setSortOption] = useState<'default' | 'price-asc' | 'price-desc' | 'name-asc'>('default');
   const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(INITIAL_RENDER_COUNT);
   const { showToast } = useToast();
   
   const { cart, favorites, pendingCartIds, addToCart, fetchCart, fetchFavorites, removeFromCart } = useStore();
@@ -207,6 +210,10 @@ function App() {
     return list;
   }, [products, sizeFilter, brandFilter, leagueFilter, clubFilter, seasonFilter, kitTypeFilter, sortOption, catalogFilter]);
 
+  useEffect(() => {
+    setVisibleCount(INITIAL_RENDER_COUNT);
+  }, [filteredProducts]);
+
   const handleCheckout = async () => {
     if (isCheckoutLoading || cart.length === 0) return;
     setIsCheckoutLoading(true);
@@ -292,7 +299,9 @@ function App() {
   // ═══════════════════════════════════════════════════════════════════════════
   // HOME TAB
   // ═══════════════════════════════════════════════════════════════════════════
-  const renderHome = () => (
+  const renderHome = () => {
+    const visibleProducts = filteredProducts.slice(0, visibleCount);
+    return (
     <PullToRefresh onRefresh={handleRefresh} disabled={isLoading}>
       <div className="space-y-5">
         {/* Header */}
@@ -613,34 +622,48 @@ function App() {
             <p className="text-tg-hint opacity-60 text-xs mt-1">Попробуйте изменить фильтры</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
-            {filteredProducts.map((product, idx) => (
-              <div
-                key={product.id}
-                className={idx < 4 ? '' : 'animate-fade-in'}
-              >
-                <ProductCard
-                  product={product}
-                  onClick={() => {
-                    haptics.tap();
-                    setSelectedProduct(product);
-                  }}
-                  onAdd={(e) => {
-                    e.stopPropagation();
-                    if (!cartProductIds.has(product.id) && !pendingCartSet.has(product.id)) {
-                      handleAddToCart(product.id, product.name);
-                    }
-                  }}
-                  inCart={cartProductIds.has(product.id) || pendingCartSet.has(product.id)}
-                  enableSharedLayout={false}
-                />
-              </div>
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 gap-3">
+              {visibleProducts.map((product, idx) => (
+                <div
+                  key={product.id}
+                  className={idx < 4 ? '' : 'animate-fade-in'}
+                >
+                  <ProductCard
+                    product={product}
+                    onClick={() => {
+                      haptics.tap();
+                      setSelectedProduct(product);
+                    }}
+                    onAdd={(e) => {
+                      e.stopPropagation();
+                      if (!cartProductIds.has(product.id) && !pendingCartSet.has(product.id)) {
+                        handleAddToCart(product.id, product.name);
+                      }
+                    }}
+                    inCart={cartProductIds.has(product.id) || pendingCartSet.has(product.id)}
+                    enableSharedLayout={false}
+                    imageLoading={idx < 4 ? 'eager' : 'lazy'}
+                    imageFetchPriority={idx < 4 ? 'high' : 'auto'}
+                  />
+                </div>
+              ))}
+            </div>
+            {visibleCount < filteredProducts.length && (
+              <LoadMoreSentinel
+                onVisible={() =>
+                  setVisibleCount((prev) =>
+                    Math.min(prev + RENDER_CHUNK, filteredProducts.length),
+                  )
+                }
+              />
+            )}
+          </>
         )}
       </div>
     </PullToRefresh>
-  );
+    );
+  };
 
   // ═══════════════════════════════════════════════════════════════════════════
   // CART TAB
@@ -857,3 +880,23 @@ function App() {
 }
 
 export default App;
+
+const LoadMoreSentinel = ({ onVisible }: { onVisible: () => void }) => {
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!ref.current) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          onVisible();
+        }
+      },
+      { rootMargin: '200px' },
+    );
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [onVisible]);
+
+  return <div ref={ref} className="h-6" />;
+};

@@ -14,6 +14,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, containerClassName }) 
         // Initialize Telegram WebApp
         WebApp.ready();
         WebApp.expand();
+        WebApp.disableVerticalSwipes?.();
         
         // Enable closing confirmation if needed
         WebApp.enableClosingConfirmation?.();
@@ -57,15 +58,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, containerClassName }) 
             (WebApp as any).onEvent?.('safeAreaChanged', updateInsets);
             (WebApp as any).onEvent?.('contentSafeAreaChanged', updateInsets);
         } catch { /* ignore */ }
-        const interval = window.setInterval(updateInsets, 1000);
-
         return () => {
             WebApp.offEvent?.('viewportChanged', updateInsets);
             try {
                 (WebApp as any).offEvent?.('safeAreaChanged', updateInsets);
                 (WebApp as any).offEvent?.('contentSafeAreaChanged', updateInsets);
             } catch { /* ignore */ }
-            window.clearInterval(interval);
         };
     }, []);
 
