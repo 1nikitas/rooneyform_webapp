@@ -272,7 +272,8 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                                             if (ok) {
                                                 haptics.success();
                                                 showToast('cart', `${product.name} добавлен в корзину`);
-                                                onClose();
+                                                // Небольшая пауза перед закрытием, чтобы анимация и тост ощущались плавнее
+                                                setTimeout(onClose, 500);
                                             } else {
                                                 haptics.error();
                                             }

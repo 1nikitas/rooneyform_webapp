@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import type { Product } from '../types';
-import { Check, Plus } from 'lucide-react';
+import { Check, Plus, Heart } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { formatPrice } from '../utils/currency';
 import { resolveAssetUrl } from '../utils/assets';
@@ -12,6 +12,8 @@ interface ProductCardProps {
     onClick: () => void;
     onAdd: (e: React.MouseEvent) => void;
     inCart?: boolean;
+    isFavorite?: boolean;
+    onToggleFavorite?: (e: React.MouseEvent) => void;
     enableSharedLayout?: boolean;
     imageLoading?: 'lazy' | 'eager';
     imageFetchPriority?: 'high' | 'low' | 'auto';
@@ -22,6 +24,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     onClick,
     onAdd,
     inCart = false,
+    isFavorite = false,
+    onToggleFavorite,
     enableSharedLayout = true,
     imageLoading = 'lazy',
     imageFetchPriority = 'auto',
@@ -61,31 +65,55 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                     </div>
                 )}
                 
-                {/* Add to cart button */}
-                <motion.button
-                    onClick={onAdd}
-                    disabled={inCart}
-                    className={`
-                        absolute top-2.5 right-2.5
-                        w-7 h-7 rounded-lg
-                        flex items-center justify-center
-                        transition-all duration-200 shadow-md
-                        ${inCart
-                            ? 'bg-white/90 text-black cursor-default backdrop-blur-sm'
-                            : isDark
-                                ? 'bg-white/10 text-white hover:bg-white/16 active:bg-white/22 backdrop-blur-md border border-white/15'
-                                : 'bg-black/35 text-white hover:bg-black/45 active:bg-black/55 backdrop-blur-md border border-white/15'
-                        }
-                    `}
-                    whileTap={inCart ? undefined : { scale: 0.9 }}
-                    aria-label={inCart ? 'В корзине' : 'Добавить в корзину'}
-                >
-                    {inCart ? (
-                        <Check size={14} strokeWidth={2.5} />
-                    ) : (
-                        <Plus size={14} strokeWidth={2.5} />
+                {/* Quick actions (favorite + add to cart) */}
+                <div className="absolute top-2.5 right-2.5 flex flex-col gap-1 items-end">
+                    {/* Favorite button */}
+                    {onToggleFavorite && (
+                        <motion.button
+                            onClick={onToggleFavorite}
+                            className={`
+                                w-7 h-7 rounded-lg
+                                flex items-center justify-center
+                                transition-all duration-200 shadow-md
+                                ${isFavorite
+                                    ? 'bg-white/90 text-black backdrop-blur-sm'
+                                    : isDark
+                                        ? 'bg-white/10 text-white hover:bg-white/16 active:bg-white/22 backdrop-blur-md border border-white/15'
+                                        : 'bg-black/35 text-white hover:bg-black/45 active:bg-black/55 backdrop-blur-md border border-white/15'
+                                }
+                            `}
+                            whileTap={{ scale: 0.9 }}
+                            aria-label={isFavorite ? 'Убрать из избранного' : 'Добавить в избранное'}
+                        >
+                            <Heart size={14} strokeWidth={2.5} fill={isFavorite ? 'currentColor' : 'none'} />
+                        </motion.button>
                     )}
-                </motion.button>
+
+                    {/* Add to cart button */}
+                    <motion.button
+                        onClick={onAdd}
+                        disabled={inCart}
+                        className={`
+                            w-7 h-7 rounded-lg
+                            flex items-center justify-center
+                            transition-all duration-200 shadow-md
+                            ${inCart
+                                ? 'bg-white/90 text-black cursor-default backdrop-blur-sm'
+                                : isDark
+                                    ? 'bg-white/10 text-white hover:bg-white/16 active:bg-white/22 backdrop-blur-md border border-white/15'
+                                    : 'bg-black/35 text-white hover:bg-black/45 active:bg-black/55 backdrop-blur-md border border-white/15'
+                            }
+                        `}
+                        whileTap={inCart ? undefined : { scale: 0.9 }}
+                        aria-label={inCart ? 'В корзине' : 'Добавить в корзину'}
+                    >
+                        {inCart ? (
+                            <Check size={14} strokeWidth={2.5} />
+                        ) : (
+                            <Plus size={14} strokeWidth={2.5} />
+                        )}
+                    </motion.button>
+                </div>
                 
                 {/* Bottom content - overlaps only the bottom edge of the jersey */}
                 <div className="absolute inset-x-0 bottom-0 border-t border-white/10 bg-black/50 backdrop-blur-lg px-3 py-2.5">

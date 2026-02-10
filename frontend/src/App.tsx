@@ -60,7 +60,7 @@ function App() {
   const [visibleCount, setVisibleCount] = useState(INITIAL_RENDER_COUNT);
   const { showToast } = useToast();
   
-  const { cart, favorites, pendingCartIds, addToCart, fetchCart, fetchFavorites, removeFromCart } = useStore();
+  const { cart, favorites, pendingCartIds, addToCart, fetchCart, fetchFavorites, removeFromCart, toggleFavorite } = useStore();
   const fetchRequestId = useRef(0);
   const fetchAbortRef = useRef<AbortController | null>(null);
 
@@ -235,20 +235,28 @@ function App() {
       });
       const orderList = orderEntries.length ? orderEntries.join(', ') : 'товар';
       const message = `Здравствуйте! Хотел бы сделать заказ: ${orderList}. Что для этого нужно сделать?`;
-      const tgChatUrl = `https://t.me/rooneyform_admin?text=${encodeURIComponent(message)}`;
+      const encodedMessage = encodeURIComponent(message);
+      const tgUsername = 'rooneyform_admin';
+      const tgDeeplink = `tg://resolve?domain=${tgUsername}&text=${encodedMessage}`;
+      const tgWebLink = `https://t.me/${tgUsername}?text=${encodedMessage}`;
 
       haptics.success();
       showToast('success', orderId ? `Заказ #${orderId} создан!` : 'Заказ создан!');
       
       // Open Telegram chat with admin for order confirmation
       try {
-        WebApp.openTelegramLink(tgChatUrl);
+        // Deeplink с параметром text – чаще корректно подставляет текст на мобильных клиентах
+        WebApp.openTelegramLink(tgDeeplink);
       } catch {
-        // Fallback: try opening link directly
+        // Fallback: пробуем обычную веб‑ссылку
         try {
-          window.open(tgChatUrl, '_blank');
+          WebApp.openTelegramLink(tgWebLink);
         } catch {
-          // Ignore
+          try {
+            window.open(tgWebLink, '_blank');
+          } catch {
+            // Ignore
+          }
         }
       }
     } catch (e) {
@@ -292,6 +300,7 @@ function App() {
 
   const cartProductIds = useMemo(() => new Set(cart.map(item => item.product.id)), [cart]);
   const pendingCartSet = useMemo(() => new Set(pendingCartIds), [pendingCartIds]);
+  const favoritesSet = useMemo(() => new Set(favorites.map(f => f.product.id)), [favorites]);
 
   const cartTotal = useMemo(
     () => cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0),
@@ -637,30 +646,46 @@ function App() {
         ) : (
           <>
             <div className="grid grid-cols-2 gap-3">
-              {visibleProducts.map((product, idx) => (
-                <div
-                  key={product.id}
-                  className={idx < 4 ? '' : 'animate-fade-in'}
-                >
-                  <ProductCard
-                    product={product}
-                    onClick={() => {
-                      haptics.tap();
-                      setSelectedProduct(product);
-                    }}
-                    onAdd={(e) => {
-                      e.stopPropagation();
-                      if (!cartProductIds.has(product.id) && !pendingCartSet.has(product.id)) {
-                        handleAddToCart(product.id, product.name);
-                      }
-                    }}
-                    inCart={cartProductIds.has(product.id) || pendingCartSet.has(product.id)}
-                    enableSharedLayout={false}
-                    imageLoading={idx < 4 ? 'eager' : 'lazy'}
-                    imageFetchPriority={idx < 4 ? 'high' : 'auto'}
-                  />
-                </div>
-              ))}
+              {visibleProducts.map((product, idx) => {
+                const inCart = cartProductIds.has(product.id) || pendingCartSet.has(product.id);
+                const isFavorite = favoritesSet.has(product.id);
+                return (
+                  <div
+                    key={product.id}
+                    className={idx < 4 ? '' : 'animate-fade-in'}
+                  >
+                    <ProductCard
+                      product={product}
+                      onClick={() => {
+                        haptics.tap();
+                        setSelectedProduct(product);
+                      }}
+                      onAdd={(e) => {
+                        e.stopPropagation();
+                        if (!inCart) {
+                          handleAddToCart(product.id, product.name);
+                        }
+                      }}
+                      inCart={inCart}
+                      isFavorite={isFavorite}
+                      onToggleFavorite={(e) => {
+                        e.stopPropagation();
+                        haptics.button();
+                        toggleFavorite(product.id);
+                        if (isFavorite) {
+                          showToast('info', 'Удалено из избранного');
+                        } else {
+                          haptics.success();
+                          showToast('success', 'Добавлено в избранное');
+                        }
+                      }}
+                      enableSharedLayout={false}
+                      imageLoading={idx < 4 ? 'eager' : 'lazy'}
+                      imageFetchPriority={idx < 4 ? 'high' : 'auto'}
+                    />
+                  </div>
+                );
+              })}
             </div>
             {visibleCount < filteredProducts.length && (
               <LoadMoreSentinel
@@ -784,28 +809,38 @@ function App() {
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3">
-          {favorites.map((fav, idx) => (
-            <div
-              key={fav.product.id}
-              className={idx < 4 ? '' : 'animate-fade-in'}
-            >
-              <ProductCard
-                product={fav.product}
-                onClick={() => {
-                  haptics.tap();
-                  setSelectedProduct(fav.product);
-                }}
-                onAdd={(e) => {
-                  e.stopPropagation();
-                  if (!cartProductIds.has(fav.product.id) && !pendingCartSet.has(fav.product.id)) {
-                    handleAddToCart(fav.product.id, fav.product.name);
-                  }
-                }}
-                inCart={cartProductIds.has(fav.product.id) || pendingCartSet.has(fav.product.id)}
-                enableSharedLayout={false}
-              />
-            </div>
-          ))}
+          {favorites.map((fav, idx) => {
+            const inCart = cartProductIds.has(fav.product.id) || pendingCartSet.has(fav.product.id);
+            return (
+              <div
+                key={fav.product.id}
+                className={idx < 4 ? '' : 'animate-fade-in'}
+              >
+                <ProductCard
+                  product={fav.product}
+                  onClick={() => {
+                    haptics.tap();
+                    setSelectedProduct(fav.product);
+                  }}
+                  onAdd={(e) => {
+                    e.stopPropagation();
+                    if (!inCart) {
+                      handleAddToCart(fav.product.id, fav.product.name);
+                    }
+                  }}
+                  inCart={inCart}
+                  isFavorite
+                  onToggleFavorite={(e) => {
+                    e.stopPropagation();
+                    haptics.button();
+                    toggleFavorite(fav.product.id);
+                    showToast('info', 'Удалено из избранного');
+                  }}
+                  enableSharedLayout={false}
+                />
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
