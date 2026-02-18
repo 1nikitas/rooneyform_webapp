@@ -237,42 +237,27 @@ function App() {
       const message = `Здравствуйте! Хотел бы сделать заказ: ${orderList}. Что для этого нужно сделать?`;
       const encodedMessage = encodeURIComponent(message);
       const tgUsername = 'rooneyform_admin';
+      const tgDeeplink = `tg://resolve?domain=${tgUsername}&text=${encodedMessage}`;
       const tgWebLink = `https://t.me/${tgUsername}?text=${encodedMessage}`;
 
       haptics.success();
       showToast('success', orderId ? `Заказ #${orderId} создан!` : 'Заказ создан!');
-      
-      // Open Telegram chat with admin for order confirmation.
-      // На части мобильных клиентов `openTelegramLink()` может молча игнорировать `tg://...`,
-      // поэтому сначала пробуем https-ссылку.
-      let opened = false;
-      try {
-        WebApp.openTelegramLink(tgWebLink);
-        opened = true;
-      } catch {
-        // ignore
-      }
-      if (!opened) {
+
+      const platform = WebApp.platform;
+      const isMobile = platform === 'android' || platform === 'android_x' || platform === 'ios';
+
+      if (isMobile) {
+        // tg:// deeplink reliably prefills message text on mobile Telegram clients
         try {
-          WebApp.openLink(tgWebLink);
-          opened = true;
+          window.location.href = tgDeeplink;
         } catch {
-          // ignore
+          try { WebApp.openTelegramLink(tgWebLink); } catch { /* ignore */ }
         }
-      }
-      if (!opened) {
+      } else {
         try {
-          window.open(tgWebLink, '_blank');
-          opened = true;
+          WebApp.openTelegramLink(tgWebLink);
         } catch {
-          // ignore
-        }
-      }
-      if (!opened) {
-        try {
-          window.location.href = tgWebLink;
-        } catch {
-          // ignore
+          try { window.open(tgWebLink, '_blank'); } catch { /* ignore */ }
         }
       }
     } catch (e) {
