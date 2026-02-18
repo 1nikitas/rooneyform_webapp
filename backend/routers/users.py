@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException, Header, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
@@ -14,7 +15,9 @@ from schemas import (
     OrderSchema,
 )
 from utils.media import normalize_product_media
-from utils.telegram import send_admin_message
+from utils.telegram import send_admin_message, send_user_message_to_admin
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -204,7 +207,7 @@ async def remove_favorite(product_id: int, user_id: int = Depends(get_current_us
 async def create_order(user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(CartItem)
-        .options(selectinload(CartItem.product))
+        .options(selectinload(CartItem.product).selectinload(Product.category))
         .where(CartItem.user_id == user_id)
     )
     cart_items = result.unique().scalars().all()
@@ -252,11 +255,40 @@ async def create_order(user_id: int = Depends(get_current_user_id), db: AsyncSes
         f"- {item.product_name} x{item.quantity} = {item.price * item.quantity:.2f} ₽"
         for item in order_with_items.items
     )
-    message = (
+    admin_notification = (
         f"Новый заказ #{order_with_items.id}\n"
         f"Пользователь: {user_id}\n"
         f"Позиции:\n{items_summary}\n"
         f"Итого: {order_with_items.total_price:.2f} ₽"
     )
-    await send_admin_message(message)
+    await send_admin_message(admin_notification)
+
+    # Also send user's message to admin (same format as frontend)
+    order_entries = []
+    for item in valid_items:
+        # Determine label based on category (if available)
+        product = item.product
+        category = getattr(product, 'category', None)
+        if category and hasattr(category, 'slug'):
+            label = 'плакат' if category.slug == 'posters' else 'футболка'
+        else:
+            label = 'товар'
+        
+        tg_post_url = getattr(product, 'tg_post_url', None)
+        entry = f"{label} — {tg_post_url}" if tg_post_url and tg_post_url.strip() else label
+        
+        # Add entry for each quantity
+        quantity = max(1, item.quantity or 1)
+        for _ in range(quantity):
+            order_entries.append(entry)
+    
+    order_list = ', '.join(order_entries) if order_entries else 'товар'
+    user_message = f"Здравствуйте! Хотел бы сделать заказ: {order_list}. Что для этого нужно сделать?"
+    
+    # Send user message to admin (non-blocking, don't fail order creation if this fails)
+    try:
+        await send_user_message_to_admin(user_id, user_message)
+    except Exception:
+        logger.exception("Failed to send user message to admin, but order was created successfully")
+
     return order_with_items

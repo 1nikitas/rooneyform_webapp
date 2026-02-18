@@ -235,43 +235,60 @@ function App() {
       });
       const orderList = orderEntries.length ? orderEntries.join(', ') : 'товар';
       const message = `Здравствуйте! Хотел бы сделать заказ: ${orderList}. Что для этого нужно сделать?`;
+      const encodedMessage = encodeURIComponent(message);
       const tgUsername = 'rooneyform_admin';
-      const tgChatLink = `https://t.me/${tgUsername}`;
+      const tgDeeplink = `tg://resolve?domain=${tgUsername}&text=${encodedMessage}`;
+      const tgWebLink = `https://t.me/${tgUsername}?text=${encodedMessage}`;
 
       haptics.success();
       showToast('success', orderId ? `Заказ #${orderId} создан!` : 'Заказ создан!');
 
-      // Copy order message to clipboard so user can paste it in chat
-      try {
-        await navigator.clipboard.writeText(message);
-      } catch {
-        // Fallback for environments where Clipboard API is unavailable
+      // Try multiple methods to open chat with pre-filled message
+      // Method 1: Hidden <a> element with tg:// deeplink (works best on mobile)
+      setTimeout(() => {
         try {
-          const ta = document.createElement('textarea');
-          ta.value = message;
-          ta.style.position = 'fixed';
-          ta.style.opacity = '0';
-          document.body.appendChild(ta);
-          ta.focus();
-          ta.select();
-          document.execCommand('copy');
-          document.body.removeChild(ta);
+          const link = document.createElement('a');
+          link.href = tgDeeplink;
+          link.style.display = 'none';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          return;
         } catch { /* ignore */ }
-      }
+      }, 300);
 
-      // Small delay so the user sees the "order created" toast first
-      setTimeout(() => {
-        showToast('info', 'Сообщение скопировано — вставьте в чат');
-      }, 600);
-
-      // Open admin chat (without ?text= which doesn't work on mobile)
+      // Method 2: WebApp.openLink with tg:// deeplink
       setTimeout(() => {
         try {
-          WebApp.openTelegramLink(tgChatLink);
+          if (typeof WebApp.openLink === 'function') {
+            WebApp.openLink(tgDeeplink);
+            return;
+          }
+        } catch { /* ignore */ }
+      }, 400);
+
+      // Method 3: window.location.href with tg:// deeplink
+      setTimeout(() => {
+        try {
+          window.location.href = tgDeeplink;
+          return;
+        } catch { /* ignore */ }
+      }, 500);
+
+      // Method 4: WebApp.openTelegramLink with https://t.me/...?text= (works on desktop)
+      setTimeout(() => {
+        try {
+          WebApp.openTelegramLink(tgWebLink);
         } catch {
-          try { window.open(tgChatLink, '_blank'); } catch { /* ignore */ }
+          try {
+            WebApp.openTelegramLink(`https://t.me/${tgUsername}`);
+          } catch {
+            try {
+              window.open(`https://t.me/${tgUsername}`, '_blank');
+            } catch { /* ignore */ }
+          }
         }
-      }, 900);
+      }, 600);
     } catch (e) {
       // Make mobile/WebView failures actionable in logs
       const err = e as unknown;
