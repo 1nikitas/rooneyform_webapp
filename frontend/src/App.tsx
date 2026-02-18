@@ -243,24 +243,48 @@ function App() {
       haptics.success();
       showToast('success', orderId ? `Заказ #${orderId} создан!` : 'Заказ создан!');
       
-      // Open Telegram chat with admin for order confirmation
+      // Open Telegram chat with admin for order confirmation.
+      // На части мобильных клиентов `openTelegramLink()` может молча игнорировать `tg://...`,
+      // поэтому сначала пробуем https-ссылку.
+      let opened = false;
       try {
-        // Deeplink с параметром text – чаще корректно подставляет текст на мобильных клиентах
-        WebApp.openTelegramLink(tgDeeplink);
+        WebApp.openTelegramLink(tgWebLink);
+        opened = true;
       } catch {
-        // Fallback: пробуем обычную веб‑ссылку
+        // ignore
+      }
+      if (!opened) {
         try {
-          WebApp.openTelegramLink(tgWebLink);
+          WebApp.openLink(tgWebLink);
+          opened = true;
         } catch {
-          try {
-            window.open(tgWebLink, '_blank');
-          } catch {
-            // Ignore
-          }
+          // ignore
+        }
+      }
+      if (!opened) {
+        try {
+          window.open(tgWebLink, '_blank');
+          opened = true;
+        } catch {
+          // ignore
+        }
+      }
+      if (!opened) {
+        try {
+          window.location.href = tgWebLink;
+        } catch {
+          // ignore
         }
       }
     } catch (e) {
-      console.error(e);
+      // Make mobile/WebView failures actionable in logs
+      const err = e as unknown;
+      const maybeAxios = err as { response?: { status?: number; data?: unknown }; message?: string };
+      console.error('Checkout failed', {
+        message: maybeAxios?.message,
+        status: maybeAxios?.response?.status,
+        data: maybeAxios?.response?.data,
+      });
       haptics.error();
       showToast('error', 'Ошибка оформления. Попробуйте ещё раз.');
     } finally {
