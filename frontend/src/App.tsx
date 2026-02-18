@@ -237,7 +237,6 @@ function App() {
       const message = `Здравствуйте! Хотел бы сделать заказ: ${orderList}. Что для этого нужно сделать?`;
       const encodedMessage = encodeURIComponent(message);
       const tgUsername = 'rooneyform_admin';
-      const tgDeeplink = `tg://resolve?domain=${tgUsername}&text=${encodedMessage}`;
       const tgWebLink = `https://t.me/${tgUsername}?text=${encodedMessage}`;
 
       haptics.success();
