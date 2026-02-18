@@ -235,31 +235,43 @@ function App() {
       });
       const orderList = orderEntries.length ? orderEntries.join(', ') : 'товар';
       const message = `Здравствуйте! Хотел бы сделать заказ: ${orderList}. Что для этого нужно сделать?`;
-      const encodedMessage = encodeURIComponent(message);
       const tgUsername = 'rooneyform_admin';
-      const tgDeeplink = `tg://resolve?domain=${tgUsername}&text=${encodedMessage}`;
-      const tgWebLink = `https://t.me/${tgUsername}?text=${encodedMessage}`;
+      const tgChatLink = `https://t.me/${tgUsername}`;
 
       haptics.success();
       showToast('success', orderId ? `Заказ #${orderId} создан!` : 'Заказ создан!');
 
-      const platform = WebApp.platform;
-      const isMobile = platform === 'android' || platform === 'android_x' || platform === 'ios';
-
-      if (isMobile) {
-        // tg:// deeplink reliably prefills message text on mobile Telegram clients
+      // Copy order message to clipboard so user can paste it in chat
+      try {
+        await navigator.clipboard.writeText(message);
+      } catch {
+        // Fallback for environments where Clipboard API is unavailable
         try {
-          window.location.href = tgDeeplink;
-        } catch {
-          try { WebApp.openTelegramLink(tgWebLink); } catch { /* ignore */ }
-        }
-      } else {
-        try {
-          WebApp.openTelegramLink(tgWebLink);
-        } catch {
-          try { window.open(tgWebLink, '_blank'); } catch { /* ignore */ }
-        }
+          const ta = document.createElement('textarea');
+          ta.value = message;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.focus();
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        } catch { /* ignore */ }
       }
+
+      // Small delay so the user sees the "order created" toast first
+      setTimeout(() => {
+        showToast('info', 'Сообщение скопировано — вставьте в чат');
+      }, 600);
+
+      // Open admin chat (without ?text= which doesn't work on mobile)
+      setTimeout(() => {
+        try {
+          WebApp.openTelegramLink(tgChatLink);
+        } catch {
+          try { window.open(tgChatLink, '_blank'); } catch { /* ignore */ }
+        }
+      }, 900);
     } catch (e) {
       // Make mobile/WebView failures actionable in logs
       const err = e as unknown;
