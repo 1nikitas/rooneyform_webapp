@@ -235,7 +235,6 @@ function App() {
       });
       const orderList = orderEntries.length ? orderEntries.join(', ') : 'товар';
       const message = `Здравствуйте! Хотел бы сделать заказ: ${orderList}. Что для этого нужно сделать?`;
-      const encodedMessage = encodeURIComponent(message);
       const tgUsername = 'rooneyform_admin';
 
       let isIOS = false;
@@ -245,24 +244,35 @@ function App() {
         // ignore
       }
 
-      // На iOS Telegram WebApp часто игнорирует параметр text,
-      // поэтому копируем текст заказа в буфер обмена и открываем чат без предзаполненного текста.
-      if (isIOS && typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-        try {
-          await navigator.clipboard.writeText(message);
-          showToast('info', 'Текст заказа скопирован, вставьте его в чат');
-        } catch {
-          // ignore clipboard errors
+      let tgDeeplink: string;
+      let tgWebLink: string;
+
+      if (isIOS) {
+        // На iOS Telegram WebApp text-параметр часто игнорируется, поэтому:
+        // 1) Пытаемся положить текст в буфер обмена
+        // 2) В любом случае показываем системное окно с текстом, чтобы его можно было скопировать вручную
+        if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+          try {
+            await navigator.clipboard.writeText(message);
+            showToast('info', 'Текст заказа скопирован, при необходимости вставьте его в чат');
+          } catch {
+            // ignore clipboard errors
+          }
         }
+
+        try {
+          window.prompt('Скопируйте текст заказа и вставьте его в чат с админом:', message);
+        } catch {
+          // ignore prompt errors
+        }
+
+        tgDeeplink = `tg://resolve?domain=${tgUsername}`;
+        tgWebLink = `https://t.me/${tgUsername}`;
+      } else {
+        const encodedMessage = encodeURIComponent(message);
+        tgDeeplink = `tg://resolve?domain=${tgUsername}&text=${encodedMessage}`;
+        tgWebLink = `https://t.me/${tgUsername}?text=${encodedMessage}`;
       }
-
-      const tgDeeplink = isIOS
-        ? `tg://resolve?domain=${tgUsername}`
-        : `tg://resolve?domain=${tgUsername}&text=${encodedMessage}`;
-
-      const tgWebLink = isIOS
-        ? `https://t.me/${tgUsername}`
-        : `https://t.me/${tgUsername}?text=${encodedMessage}`;
 
       haptics.success();
       showToast('success', orderId ? `Заказ #${orderId} создан!` : 'Заказ создан!');
