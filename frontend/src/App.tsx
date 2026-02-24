@@ -237,8 +237,32 @@ function App() {
       const message = `Здравствуйте! Хотел бы сделать заказ: ${orderList}. Что для этого нужно сделать?`;
       const encodedMessage = encodeURIComponent(message);
       const tgUsername = 'rooneyform_admin';
-      const tgDeeplink = `tg://resolve?domain=${tgUsername}&text=${encodedMessage}`;
-      const tgWebLink = `https://t.me/${tgUsername}?text=${encodedMessage}`;
+
+      let isIOS = false;
+      try {
+        isIOS = WebApp.platform === 'ios';
+      } catch {
+        // ignore
+      }
+
+      // На iOS Telegram WebApp часто игнорирует параметр text,
+      // поэтому копируем текст заказа в буфер обмена и открываем чат без предзаполненного текста.
+      if (isIOS && typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        try {
+          await navigator.clipboard.writeText(message);
+          showToast('info', 'Текст заказа скопирован, вставьте его в чат');
+        } catch {
+          // ignore clipboard errors
+        }
+      }
+
+      const tgDeeplink = isIOS
+        ? `tg://resolve?domain=${tgUsername}`
+        : `tg://resolve?domain=${tgUsername}&text=${encodedMessage}`;
+
+      const tgWebLink = isIOS
+        ? `https://t.me/${tgUsername}`
+        : `https://t.me/${tgUsername}?text=${encodedMessage}`;
 
       haptics.success();
       showToast('success', orderId ? `Заказ #${orderId} создан!` : 'Заказ создан!');
