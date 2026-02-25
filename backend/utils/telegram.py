@@ -3,7 +3,7 @@ import json
 import logging
 import os
 import urllib.request
-from typing import List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 
 logger = logging.getLogger(__name__)
@@ -39,7 +39,12 @@ async def _post_json(url: str, payload: dict) -> None:
     await asyncio.to_thread(post)
 
 
-async def send_message(chat_id: Union[int, str], text: str) -> bool:
+async def send_message(
+    chat_id: Union[int, str],
+    text: str,
+    *,
+    reply_markup: Optional[Dict[str, Any]] = None,
+) -> bool:
     """
     Отправить обычное сообщение пользователю или чату.
     Используется и для ответов ботом, и для служебных уведомлений.
@@ -50,8 +55,12 @@ async def send_message(chat_id: Union[int, str], text: str) -> bool:
 
     url = f"https://api.telegram.org/bot{token}/sendMessage"
 
+    payload: Dict[str, Any] = {"chat_id": chat_id, "text": text}
+    if reply_markup is not None:
+        payload["reply_markup"] = reply_markup
+
     try:
-        await _post_json(url, {"chat_id": chat_id, "text": text})
+        await _post_json(url, payload)
         return True
     except Exception:
         logger.exception("Failed to send Telegram message to chat_id=%s", chat_id)
