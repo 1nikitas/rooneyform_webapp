@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, func
 from sqlalchemy.orm import selectinload
 from typing import List, Optional
 from datetime import datetime
@@ -110,14 +110,17 @@ async def get_products(
         query = query.where(Category.slug == category_slug)
     
     if search:
-        query = query.where(
-            or_(
-                Product.name.ilike(f"%{search}%"),
-                Product.team.ilike(f"%{search}%"),
-                Product.brand.ilike(f"%{search}%"),
-                Product.league.ilike(f"%{search}%"),
+        search_normalized = search.strip().lower()
+        if search_normalized:
+            pattern = f"%{search_normalized}%"
+            query = query.where(
+                or_(
+                    func.lower(Product.name).like(pattern),
+                    func.lower(Product.team).like(pattern),
+                    func.lower(Product.brand).like(pattern),
+                    func.lower(Product.league).like(pattern),
+                )
             )
-        )
     
     query = query.limit(limit).offset(offset)
     result = await db.execute(query)
