@@ -19,8 +19,9 @@ JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-in-production")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRES_MINUTES = int(os.getenv("JWT_EXPIRES_MINUTES", "43200"))  # 30 days
 
-DEFAULT_ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
-DEFAULT_ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
+# Жёстко зашитые креды для единственного администратора
+DEFAULT_ADMIN_USERNAME = "rooney_masteradmin"
+DEFAULT_ADMIN_PASSWORD = "Rf!2026_Ma$ter#Admin"
 
 
 class Token(BaseModel):
@@ -50,13 +51,16 @@ async def _ensure_default_admin(db: AsyncSession) -> None:
     result = await db.execute(stmt)
     admin = result.scalar_one_or_none()
     if admin:
-        return
-    admin = AdminAccount(
-        username=DEFAULT_ADMIN_USERNAME,
-        password_hash=_hash_password(DEFAULT_ADMIN_PASSWORD),
-        is_active=True,
-    )
-    db.add(admin)
+        # Обновляем пароль и активность на всякий случай
+        admin.password_hash = _hash_password(DEFAULT_ADMIN_PASSWORD)
+        admin.is_active = True
+    else:
+        admin = AdminAccount(
+            username=DEFAULT_ADMIN_USERNAME,
+            password_hash=_hash_password(DEFAULT_ADMIN_PASSWORD),
+            is_active=True,
+        )
+        db.add(admin)
     await db.commit()
 
 
