@@ -109,22 +109,27 @@ async def get_products(
     if category_slug:
         query = query.where(Category.slug == category_slug)
     
-    if search:
-        search_normalized = search.strip().lower()
-        if search_normalized:
-            pattern = f"%{search_normalized}%"
-            query = query.where(
-                or_(
-                    func.lower(Product.name).like(pattern),
-                    func.lower(Product.team).like(pattern),
-                    func.lower(Product.brand).like(pattern),
-                    func.lower(Product.league).like(pattern),
-                )
-            )
-    
     query = query.limit(limit).offset(offset)
     result = await db.execute(query)
     products = result.unique().scalars().all()
+
+    # Пост-фильтрация по поиску в Python, чтобы поиск был
+    # действительно нечувствительным к регистру и корректно работал с кириллицей.
+    if search:
+        search_normalized = search.strip().casefold()
+
+        if search_normalized:
+            def _norm(value: Optional[str]) -> str:
+                return (value or "").casefold()
+
+            products = [
+                p for p in products
+                if search_normalized in _norm(p.name)
+                or search_normalized in _norm(p.team)
+                or search_normalized in _norm(p.brand)
+                or search_normalized in _norm(p.league)
+            ]
+
     base_url = str(request.base_url)
     for product in products:
         normalize_product_media(base_url, product)
