@@ -5,7 +5,7 @@ from sqladmin import Admin
 from database import engine, Base
 from sqlalchemy import text
 from admin import CategoryAdmin, ProductAdmin, UserAdmin, CartItemAdmin, FavoriteAdmin
-from routers import store, users, telegram_webhook
+from routers import store, users, telegram_webhook, auth
 import os
 
 app = FastAPI(title="RooneyForm API")
@@ -43,6 +43,7 @@ app.add_middleware(
 app.include_router(store.router)
 app.include_router(users.router)
 app.include_router(telegram_webhook.router)
+app.include_router(auth.router)
 
 # Static Files for Images
 if not os.path.exists("static"):

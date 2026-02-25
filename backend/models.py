@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, Text, DateTime, func
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Text, DateTime, Boolean, func
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -95,3 +95,13 @@ class OrderItem(Base):
     quantity = Column(Integer, default=1)
 
     order = relationship("Order", back_populates="items")
+
+
+class AdminAccount(Base):
+    __tablename__ = "admin_accounts"
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True, nullable=False)
+    password_hash = Column(String, nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+

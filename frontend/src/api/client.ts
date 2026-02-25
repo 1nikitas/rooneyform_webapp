@@ -21,6 +21,10 @@ export const apiOrigin = (() => {
     }
 })();
 
+export const ADMIN_TOKEN_KEY = 'rf_admin_token';
+export const ADMIN_BASE_PATH = '/rf-admin-97b2c5';
+export const ADMIN_LOGIN_PATH = `${ADMIN_BASE_PATH}/login`;
+
 const apiClient = axios.create({
     baseURL: API_BASE_URL,
     headers: {
@@ -28,7 +32,7 @@ const apiClient = axios.create({
     },
 });
 
-// Interceptor to add Telegram User ID header
+// Interceptor to add Telegram User ID header + admin JWT
 apiClient.interceptors.request.use((config) => {
     // In dev mode outside Telegram, mock ID or use a default
     // WebApp.initDataUnsafe.user?.id
@@ -41,7 +45,38 @@ apiClient.interceptors.request.use((config) => {
     if (isNgrokBackend) {
         config.headers['ngrok-skip-browser-warning'] = 'true';
     }
+    if (typeof window !== 'undefined') {
+        try {
+            const token = window.localStorage.getItem(ADMIN_TOKEN_KEY);
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
+            }
+        } catch {
+            // ignore
+        }
+    }
     return config;
 });
+
+apiClient.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        const status = error?.response?.status;
+        if ((status === 401 || status === 403) && typeof window !== 'undefined') {
+            const path = window.location.pathname || '';
+            if (path.startsWith(ADMIN_BASE_PATH)) {
+                try {
+                    window.localStorage.removeItem(ADMIN_TOKEN_KEY);
+                } catch {
+                    // ignore
+                }
+                if (!path.startsWith(ADMIN_LOGIN_PATH)) {
+                    window.location.href = ADMIN_LOGIN_PATH;
+                }
+            }
+        }
+        return Promise.reject(error);
+    },
+);
 
 export default apiClient;

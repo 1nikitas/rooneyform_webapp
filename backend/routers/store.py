@@ -8,6 +8,7 @@ from uuid import uuid4
 from pathlib import Path
 from database import get_db
 from models import Product, Category, Order, ProductImage
+from routers.auth import get_current_admin
 from utils.media import normalize_product_media
 from schemas import (
     ProductSchema,
@@ -62,7 +63,10 @@ async def _get_product_with_media(
     return product
 
 @router.post("/uploads/", response_model=UploadResponse)
-async def upload_images(files: List[UploadFile] = File(...)):
+async def upload_images(
+    files: List[UploadFile] = File(...),
+    admin=Depends(get_current_admin),
+):
     if not files:
         raise HTTPException(status_code=400, detail="No files uploaded")
     _ensure_static_dir()
@@ -148,6 +152,7 @@ async def create_product(
     request: Request,
     payload: ProductCreate,
     db: AsyncSession = Depends(get_db),
+    admin=Depends(get_current_admin),
 ):
     cat_stmt = select(Category).where(Category.slug == payload.category_slug)
     cat_res = await db.execute(cat_stmt)
@@ -200,6 +205,7 @@ async def update_product(
     request: Request,
     payload: ProductUpdate,
     db: AsyncSession = Depends(get_db),
+    admin=Depends(get_current_admin),
 ):
     stmt = (
         select(Product)
@@ -245,7 +251,11 @@ async def update_product(
     return await _get_product_with_media(db, request, product.id)
 
 @router.delete("/products/{product_id}")
-async def delete_product(product_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_product(
+    product_id: int,
+    db: AsyncSession = Depends(get_db),
+    admin=Depends(get_current_admin),
+):
     stmt = select(Product).where(Product.id == product_id)
     res = await db.execute(stmt)
     product = res.scalar_one_or_none()
@@ -260,7 +270,8 @@ async def delete_product(product_id: int, db: AsyncSession = Depends(get_db)):
 async def get_orders(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    admin=Depends(get_current_admin),
 ):
     query = select(Order).options(selectinload(Order.items)).order_by(Order.created_at.desc())
 
@@ -281,7 +292,12 @@ async def get_orders(
     return result.scalars().all()
 
 @router.patch("/orders/{order_id}", response_model=OrderSchema)
-async def update_order_status(order_id: int, payload: OrderStatusUpdate, db: AsyncSession = Depends(get_db)):
+async def update_order_status(
+    order_id: int,
+    payload: OrderStatusUpdate,
+    db: AsyncSession = Depends(get_db),
+    admin=Depends(get_current_admin),
+):
     stmt = select(Order).options(selectinload(Order.items)).where(Order.id == order_id)
     res = await db.execute(stmt)
     order = res.scalar_one_or_none()

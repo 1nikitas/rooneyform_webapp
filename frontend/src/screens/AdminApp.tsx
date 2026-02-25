@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { Layout } from '../components/Layout';
-import apiClient from '../api/client';
+import apiClient, { ADMIN_TOKEN_KEY, ADMIN_LOGIN_PATH } from '../api/client';
 import type { Product, Order } from '../types';
 import { formatPrice } from '../utils/currency';
 import { resolveAssetUrl } from '../utils/assets';
@@ -552,25 +552,48 @@ export default function AdminApp() {
       minute: '2-digit',
     });
 
+  const handleLogout = () => {
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.removeItem(ADMIN_TOKEN_KEY);
+      } catch {
+        // ignore
+      }
+      window.location.href = ADMIN_LOGIN_PATH;
+    }
+  };
+
   return (
     <Layout containerClassName="max-w-6xl">
       <div className="space-y-8">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-2xl font-bold">Админ-панель</h1>
-          <div className="flex flex-wrap gap-2">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-bold">Админ-панель</h1>
+            <p className="text-xs text-tg-hint">Управление товарами и заказами</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className={`px-4 py-2 rounded-full text-sm font-semibold transition ${adminTab === 'products' ? 'badge-contrast' : 'surface-muted text-tg-hint'}`}
+                onClick={() => setAdminTab('products')}
+              >
+                Товары
+              </button>
+              <button
+                type="button"
+                className={`px-4 py-2 rounded-full text-sm font-semibold transition ${adminTab === 'orders' ? 'badge-contrast' : 'surface-muted text-tg-hint'}`}
+                onClick={() => setAdminTab('orders')}
+              >
+                Заказы
+              </button>
+            </div>
             <button
               type="button"
-              className={`px-4 py-2 rounded-full text-sm font-semibold transition ${adminTab === 'products' ? 'badge-contrast' : 'surface-muted text-tg-hint'}`}
-              onClick={() => setAdminTab('products')}
+              onClick={handleLogout}
+              className="px-3 py-2 rounded-full text-xs font-semibold surface-muted text-tg-hint hover:text-tg-text transition"
             >
-              Товары
-            </button>
-            <button
-              type="button"
-              className={`px-4 py-2 rounded-full text-sm font-semibold transition ${adminTab === 'orders' ? 'badge-contrast' : 'surface-muted text-tg-hint'}`}
-              onClick={() => setAdminTab('orders')}
-            >
-              Заказы
+              Выйти
             </button>
           </div>
         </header>
