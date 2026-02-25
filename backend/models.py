@@ -105,3 +105,13 @@ class AdminAccount(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
+
+class SizeSubscription(Base):
+    __tablename__ = "size_subscriptions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.telegram_id"), index=True)
+    size = Column(String, index=True, nullable=True)  # NULL → все размеры
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
