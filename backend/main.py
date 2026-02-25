@@ -31,18 +31,11 @@ async def ensure_product_new_columns(conn):
         if col_name not in columns:
             await conn.execute(text(f"ALTER TABLE products ADD COLUMN {col_name} {col_type}"))
 
-# CORS
-allowed_origins = [
-    "https://rooneyform.store",
-    "https://www.rooneyform.store",
-    "http://localhost:5173",
-    "http://localhost:5174",
-]
-
+# CORS – разрешаем все источники без cookie
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
