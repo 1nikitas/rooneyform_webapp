@@ -32,9 +32,16 @@ async def ensure_product_new_columns(conn):
             await conn.execute(text(f"ALTER TABLE products ADD COLUMN {col_name} {col_type}"))
 
 # CORS
+allowed_origins = [
+    "https://rooneyform.store",
+    "https://www.rooneyform.store",
+    "http://localhost:5173",
+    "http://localhost:5174",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Allow all for Telegram WebApp environment
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
